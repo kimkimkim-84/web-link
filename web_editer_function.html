@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0">
+    <title>웹에디터 7대 핵심 기능 (구글 슬라이드용 - 한줄 제목 버전)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .slide-frame {
+            width: 1920px;
+            height: 1080px;
+            background-color: white;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header-gradient {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .role-card {
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        /* 일러스트 배경 패턴 */
+        .illus-bg {
+            background-color: #f8fafc;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 10px 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slide-frame">
+        
+        <!-- 헤더 영역 -->
+        <header class="header-gradient text-white px-12 py-8 flex justify-between items-center h-[180px] shrink-0">
+            <div>
+                <div class="flex items-center gap-4 mb-3">
+                    <span class="bg-indigo-600 text-sm font-bold px-3 py-1 rounded text-white uppercase tracking-wider">Solution Strategy</span>
+                    <div class="px-4 py-1 rounded-full border border-indigo-400/30 bg-indigo-500/10 flex items-center gap-2">
+                        <i class="fas fa-check-circle text-indigo-400 text-sm"></i>
+                        <span class="text-indigo-200 text-base font-bold tracking-wide">그룹웨어 내 웹에디터의 역할</span>
+                    </div>
+                </div>
+                <h1 class="text-5xl font-bold tracking-tight mb-2">웹에디터 도입의 7가지 핵심 가치</h1>
+                <p class="text-slate-300 text-2xl font-light">임직원 업무 효율 향상과 안정적인 문서 관리를 위한 필수 요소</p>
+            </div>
+            <div class="text-right">
+                <div class="bg-white/10 rounded-xl p-5 backdrop-blur-md border border-white/10 flex flex-col items-center min-w-[120px]">
+                    <span class="text-sm text-gray-300 mb-1">Features</span>
+                    <span class="text-5xl font-bold text-white">07</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 메인 콘텐츠 영역 -->
+        <main class="flex-1 bg-slate-50 p-8 relative">
+            <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#4f46e5 2px, transparent 2px); background-size: 30px 30px;"></div>
+
+            <div class="grid grid-cols-12 gap-5 h-full relative z-10 pb-2">
+                
+                <!-- 1. 문서 작성 편의 -->
+                <div class="col-span-3 role-card bg-white border border-gray-200 p-6 rounded-xl shadow-sm flex flex-col justify-between hover:border-indigo-500 hover:shadow-md">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                <i class="fas fa-pen-nib text-2xl"></i>
+                            </div>
+                            <span class="text-sm font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">생산성</span>
+                        </div>
+                        <!-- 줄바꿈 금지(whitespace-nowrap) 적용 -->
+                        <h3 class="text-2xl font-bold text-gray-900 mb-3 whitespace-nowrap tracking-tight">1. 문서 작성 편의</h3>
+                        <p class="text-gray-700 text-lg leading-snug break-keep mb-5">
+                            직관적인 에디터로 문서를 쉽고 빠르게 작성합니다.
+                        </p>
+                    </div>
+                    <!-- 일러스트: 문서 작성 UI -->
+                    <div class="w-full h-32 illus-bg rounded-lg border border-gray-100 relative overflow-hidden flex items-center justify-center">
+                        <div class="w-3/4 h-3/4 bg-white shadow-sm border border-gray-200 rounded p-3 flex flex-col gap-2">
+                            <div class="w-1/3 h-2 bg-indigo-100 rounded"></div>
+                            <div class="w-full h-1 bg-gray-100 rounded"></div>
+                            <div class="w-full h-1 bg-gray-100 rounded"></div>
+                            <div class="w-2/3 h-1 bg-gray-100 rounded"></div>
+                            <div class="mt-2 w-8 h-8 rounded-full bg-indigo-50 absolute bottom-4 right-4 flex items-center justify-center text-indigo-400">
+                                <i class="fas fa-pen text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 서식 지원 -->
+                <div class="col-span-3 role-card bg-white border border-gray-200 p-6 rounded-xl shadow-sm flex flex-col justify-between hover:border-pink-500 hover:shadow-md">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-pink-50 flex items-center justify-center text-pink-600">
+                                <i class="fas fa-palette text-2xl"></i>
+                            </div>
+                            <span class="text-sm font-bold text-pink-600 bg-pink-50 px-3 py-1 rounded-full">가독성</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-3 whitespace-nowrap tracking-tight">2. 다양한 서식 지원</h3>
+                        <p class="text-gray-700 text-lg leading-snug break-keep mb-5">
+                            글꼴, 색상, 표 등 풍부한 서식으로 문서를 꾸밉니다.
+                        </p>
+                    </div>
+                    <!-- 일러스트: 서식 팔레트 -->
+                    <div class="w-full h-32 illus-bg rounded-lg border border-gray-100 relative overflow-hidden flex items-center justify-center">
+                        <div class="flex gap-2">
+                            <div class="w-10 h-10 bg-white border border-gray-200 rounded shadow-sm flex items-center justify-center font-bold text-gray-800 text-lg">B</div>
+                            <div class="w-10 h-10 bg-white border border-gray-200 rounded shadow-sm flex items-center justify-center italic text-gray-800 text-lg">I</div>
+                            <div class="w-10 h-10 bg-white border border-gray-200 rounded shadow-sm flex items-center justify-center underline text-gray-800 text-lg">U</div>
+                            <div class="w-10 h-10 bg-pink-100 border border-pink-200 rounded shadow-sm flex items-center justify-center text-pink-600 text-lg">A</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. 파일 삽입 -->
+                <div class="col-span-3 role-card bg-white border border-gray-200 p-6 rounded-xl shadow-sm flex flex-col justify-between hover:border-amber-500 hover:shadow-md">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+                                <i class="fas fa-paperclip text-2xl"></i>
+                            </div>
+                            <span class="text-sm font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full">전달력</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-3 whitespace-nowrap tracking-tight">3. 손쉬운 파일 삽입</h3>
+                        <p class="text-gray-700 text-lg leading-snug break-keep mb-5">
+                            이미지와 파일을 드래그하여 간편하게 첨부합니다.
+                        </p>
+                    </div>
+                    <!-- 일러스트: 이미지/파일 첨부 -->
+                    <div class="w-full h-32 illus-bg rounded-lg border border-gray-100 relative overflow-hidden flex items-center justify-center">
+                        <div class="w-20 h-24 bg-white border border-gray-200 rounded shadow-sm p-1 relative rotate-[-5deg]">
+                            <div class="w-full h-full bg-gray-50 rounded flex items-center justify-center">
+                                <i class="fas fa-image text-gray-300 text-3xl"></i>
+                            </div>
+                        </div>
+                        <div class="w-20 h-24 bg-white border border-gray-200 rounded shadow-sm p-1 absolute ml-8 rotate-[5deg] top-4">
+                             <div class="w-full h-full bg-gray-50 rounded flex items-center justify-center">
+                                <i class="fas fa-file-alt text-amber-300 text-3xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. 버전 관리 -->
+                <div class="col-span-3 role-card bg-white border border-gray-200 p-6 rounded-xl shadow-sm flex flex-col justify-between hover:border-emerald-500 hover:shadow-md">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                                <i class="fas fa-history text-2xl"></i>
+                            </div>
+                            <span class="text-sm font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">안정성</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-3 whitespace-nowrap tracking-tight">4. 버전 관리 및 복원</h3>
+                        <p class="text-gray-700 text-lg leading-snug break-keep mb-5">
+                            이력을 자동 저장하고 언제든 이전 시점으로 복원합니다.
+                        </p>
+                    </div>
+                    <!-- 일러스트: 타임라인 -->
+                    <div class="w-full h-32 illus-bg rounded-lg border border-gray-100 relative overflow-hidden flex items-center justify-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-12 bg-gray-200 rounded border border-gray-300 opacity-50 scale-90"></div>
+                            <i class="fas fa-arrow-right text-gray-300 text-xl"></i>
+                            <div class="w-10 h-12 bg-gray-200 rounded border border-gray-300 opacity-70 scale-95"></div>
+                            <i class="fas fa-arrow-right text-gray-300 text-xl"></i>
+                            <div class="w-12 h-14 bg-white rounded border border-emerald-400 shadow-sm flex items-center justify-center">
+                                <i class="fas fa-check text-emerald-500 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2열 (하단 3개) -->
+                <!-- 5. 템플릿 -->
+                <div class="col-span-4 role-card bg-white border border-gray-200 p-6 rounded-xl shadow-sm flex flex-col justify-between hover:border-purple-500 hover:shadow-md">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 rounded bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
+                                    <i class="fas fa-magic text-xl"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-gray-900 whitespace-nowrap tracking-tight">5. 업무별 템플릿</h3>
+                            </div>
+                            <p class="text-gray-700 text-lg leading-snug">
+                                회의록, 보고서 등 양식을 제공합니다.
+                            </p>
+                        </div>
+                        <span class="text-sm font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-full h-fit shrink-0">효율성</span>
+                    </div>
+                    <!-- 일러스트: 템플릿 그리드 -->
+                    <div class="mt-4 w-full h-32 illus-bg rounded-lg border border-gray-100 relative overflow-hidden flex items-center justify-center gap-4">
+                         <div class="w-20 h-24 bg-white border border-purple-200 rounded shadow-sm flex flex-col gap-1 p-2">
+                             <div class="w-full h-2 bg-purple-100 rounded"></div>
+                             <div class="w-full h-12 bg-gray-50 rounded"></div>
+                         </div>
+                         <div class="w-20 h-24 bg-white border border-purple-200 rounded shadow-sm flex flex-col gap-1 p-2">
+                             <div class="w-full h-2 bg-purple-100 rounded"></div>
+                             <div class="grid grid-cols-2 gap-1 h-12">
+                                 <div class="bg-gray-50 rounded"></div>
+                                 <div class="bg-gray-50 rounded"></div>
+                             </div>
+                         </div>
+                         <div class="w-20 h-24 bg-white border border-purple-200 rounded shadow-sm flex flex-col gap-1 p-2">
+                             <div class="w-full h-2 bg-purple-100 rounded"></div>
+                             <div class="w-full h-1 bg-gray-50 rounded mb-1"></div>
+                             <div class="w-full h-1 bg-gray-50 rounded"></div>
+                         </div>
+                    </div>
+                </div>
+
+                <!-- 6. 호환성 -->
+                <div class="col-span-4 role-card bg-white border border-gray-200 p-6 rounded-xl shadow-sm flex flex-col justify-between hover:border-blue-500 hover:shadow-md">
+                    <div class="flex items-start justify-between">
+                         <div>
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 rounded bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                                    <i class="fas fa-mobile-alt text-xl"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-gray-900 whitespace-nowrap tracking-tight">6. 모바일/브라우저 호환</h3>
+                            </div>
+                            <p class="text-gray-700 text-lg leading-snug">
+                                PC, 모바일 어디서나 동일하게 사용합니다.
+                            </p>
+                        </div>
+                        <span class="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full h-fit shrink-0">유연성</span>
+                    </div>
+                     <!-- 일러스트: PC와 모바일 -->
+                    <div class="mt-4 w-full h-32 illus-bg rounded-lg border border-gray-100 relative overflow-hidden flex items-end justify-center pb-3 gap-3">
+                         <div class="w-28 h-24 bg-white border border-gray-300 rounded-t-lg shadow-sm border-b-0 relative">
+                             <div class="absolute inset-2 bg-blue-50 rounded"></div>
+                         </div>
+                         <div class="w-12 h-20 bg-white border border-gray-300 rounded shadow-sm relative z-10">
+                             <div class="absolute inset-1 bg-blue-100 rounded"></div>
+                             <div class="absolute bottom-1 w-full flex justify-center"><div class="w-3 h-3 bg-gray-100 rounded-full"></div></div>
+                         </div>
+                    </div>
+                </div>
+
+                <!-- 7. 복사 붙여넣기 (강조) -->
+                <div class="col-span-4 role-card bg-indigo-50 border-2 border-indigo-200 p-6 rounded-xl shadow-sm flex flex-col justify-between hover:border-indigo-500 hover:shadow-md">
+                    <div class="flex items-start justify-between">
+                         <div>
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 rounded bg-white flex items-center justify-center text-indigo-700 shadow-sm shrink-0">
+                                    <i class="fas fa-paste text-xl"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-gray-900 whitespace-nowrap tracking-tight">7. 복사해도 모양 유지</h3>
+                            </div>
+                            <p class="text-gray-800 text-lg leading-snug">
+                                엑셀/워드 표가 <strong>깨지지 않고</strong> 그대로 붙습니다.
+                            </p>
+                        </div>
+                        <span class="text-sm font-bold text-white bg-indigo-600 px-3 py-1 rounded-full h-fit shrink-0">Core</span>
+                    </div>
+                     <!-- 일러스트: 엑셀 그리드 -> 문서 -->
+                    <div class="mt-4 w-full h-32 bg-white/50 rounded-lg border border-indigo-100 relative overflow-hidden flex items-center justify-center gap-5">
+                         <div class="w-24 h-24 bg-green-50 border border-green-200 rounded grid grid-cols-2 grid-rows-3 gap-[1px] p-[1px] shadow-sm">
+                             <div class="bg-white"></div><div class="bg-white"></div>
+                             <div class="bg-white"></div><div class="bg-white"></div>
+                             <div class="bg-white"></div><div class="bg-white"></div>
+                         </div>
+                         <i class="fas fa-arrow-right text-indigo-300 text-2xl"></i>
+                         <div class="w-24 h-24 bg-white border border-indigo-200 rounded grid grid-cols-2 grid-rows-3 gap-[1px] p-[1px] shadow-sm relative">
+                             <div class="bg-indigo-50"></div><div class="bg-indigo-50"></div>
+                             <div class="bg-indigo-50"></div><div class="bg-indigo-50"></div>
+                             <div class="bg-indigo-50"></div><div class="bg-indigo-50"></div>
+                             <div class="absolute -top-3 -right-3 bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"><i class="fas fa-check"></i></div>
+                         </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- 푸터 -->
+        <footer class="bg-white border-t border-gray-200 px-12 py-3 flex justify-between items-center text-gray-500 h-[60px] shrink-0">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-info-circle text-indigo-500 text-sm"></i>
+                <span class="text-sm font-medium">모든 기능은 ActiveX 설치가 필요 없는 웹 표준 기술(HTML5)을 기반으로 동작합니다.</span>
+            </div>
+            <div class="text-sm font-mono tracking-widest text-gray-400">
+                P-07 / CONFIDENTIAL
+            </div>
+        </footer>
+
+    </div>
+
+</body>
+</html>
