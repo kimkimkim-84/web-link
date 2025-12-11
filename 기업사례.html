@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Palantir 도입 성공 사례 (Case Studies)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background-color: #333;
+            font-family: 'Noto Sans KR', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 0;
+            gap: 50px;
+        }
+        
+        /* Slide Style */
+        .slide {
+            background: white;
+            width: 297mm; /* A4 Landscape */
+            height: 210mm;
+            padding: 15mm 20mm;
+            box-sizing: border-box;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-bottom: 15px solid;
+        }
+
+        /* Typography */
+        h1 { font-size: 42px; font-weight: 900; line-height: 1.2; margin-bottom: 5px; color: #1E293B; }
+        h2 { font-size: 24px; font-weight: 800; margin-bottom: 15px; margin-top: 25px; display: flex; align-items: center; color: #334155; }
+        p { font-size: 20px; line-height: 1.6; color: #475569; word-break: keep-all; }
+        
+        /* Components */
+        .case-tag {
+            display: inline-block; padding: 6px 16px; border-radius: 8px;
+            font-size: 18px; font-weight: 800; margin-bottom: 15px; letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .impact-box {
+            background: #F8FAFC; border-radius: 20px; padding: 30px;
+            border-left: 10px solid;
+            margin-top: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .company-logo-placeholder {
+            font-size: 30px; font-weight: 900; opacity: 0.8;
+            margin-bottom: 10px; display: block;
+        }
+
+        .bg-icon {
+            position: absolute; right: 30px; top: 40px;
+            font-size: 100px; opacity: 0.1;
+        }
+
+        /* Print Settings */
+        @media print {
+            body { background: none; padding: 0; gap: 0; }
+            .slide { width: 100%; height: 100vh; margin: 0; border-bottom: none; page-break-after: always; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- CASE 1: AIRBUS (Overseas) -->
+    <!-- ========================================== -->
+    <div class="slide" style="border-color: #00205B;">
+        <i class="fas fa-plane-departure bg-icon text-blue-900"></i>
+        
+        <div class="mb-6">
+            <span class="case-tag bg-blue-100 text-blue-900">해외 성공 사례 1</span>
+            <span class="company-logo-placeholder text-blue-900">AIRBUS (에어버스)</span>
+            <h1 class="text-slate-900">"비행기 조립 속도를 33% 높이다"</h1>
+        </div>
+
+        <div class="grid grid-cols-2 gap-16 h-full">
+            <!-- Problem -->
+            <div>
+                <h2 class="text-red-600"><i class="fas fa-exclamation-triangle mr-3"></i>도입 전 고민 (Pain Point)</h2>
+                <p>
+                    A350 비행기 한 대를 만드는 데 수만 개의 부품이 들어갑니다. <br>
+                    <strong>"부품 하나만 늦게 와도 전체 조립 라인이 멈추는"</strong> 일이 빈번했고, 불량 원인을 찾는 데 몇 주가 걸렸습니다.
+                </p>
+
+                <h2 class="text-blue-700"><i class="fas fa-check-circle mr-3"></i>팔란티어 활용 (Skywise)</h2>
+                <p>
+                    팔란티어로 전 세계 항공사, 부품 공급사, 정비팀의 데이터를 하나로 묶었습니다.
+                    <strong>"어떤 부품이 언제 고장 날지" 미리 예측</strong>하여 정비 시간을 획기적으로 줄였습니다.
+                </p>
+            </div>
+
+            <!-- Result -->
+            <div class="flex flex-col h-full">
+                <div class="impact-box border-blue-900 bg-blue-50/50 h-full flex flex-col justify-center">
+                    <h3 class="text-3xl font-black text-blue-900 mb-6">CEO를 위한 핵심 요약</h3>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xl font-bold text-slate-500 block mb-1">AS 효과</span>
+                            <p class="text-2xl font-bold text-slate-800">항공기 지연율 <span class="text-red-500">획기적 감소</span></p>
+                        </div>
+                        <div>
+                            <span class="text-xl font-bold text-slate-500 block mb-1">생산성</span>
+                            <p class="text-2xl font-bold text-slate-800">A350 생산 속도 <span class="text-blue-600">33% 증가</span></p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-blue-200">
+                        <p class="text-lg font-medium text-slate-700">
+                            "팔란티어는 단순한 SW가 아닙니다.<br>
+                            <strong>전 세계 항공 산업의 표준 운영체제</strong>가 되었습니다."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- CASE 2: BP (Overseas) -->
+    <!-- ========================================== -->
+    <div class="slide" style="border-color: #009D4E;">
+        <i class="fas fa-oil-well bg-icon text-green-700"></i>
+        
+        <div class="mb-6">
+            <span class="case-tag bg-green-100 text-green-800">해외 성공 사례 2</span>
+            <span class="company-logo-placeholder text-green-700">BP (브리티시 페트롤리엄)</span>
+            <h1 class="text-slate-900">"지하의 석유를 데이터로 캔다"</h1>
+        </div>
+
+        <div class="grid grid-cols-2 gap-16 h-full">
+            <!-- Problem -->
+            <div>
+                <h2 class="text-red-600"><i class="fas fa-exclamation-triangle mr-3"></i>도입 전 고민 (Pain Point)</h2>
+                <p>
+                    전 세계 수천 개의 유정에 센서가 달려있지만, <strong>데이터가 다 따로 놀았습니다.</strong>
+                    엔지니어가 데이터를 찾는데만 하루 업무의 40%를 쓰고 있었습니다.
+                </p>
+
+                <h2 class="text-green-700"><i class="fas fa-check-circle mr-3"></i>팔란티어 활용 (Digital Twin)</h2>
+                <p>
+                    전 세계 유정을 <strong>'디지털 쌍둥이'</strong>로 만들어 본사 모니터에 띄웠습니다.
+                    유정의 압력, 온도 데이터를 AI가 분석하여 <strong>가장 효율적으로 기름을 뽑는 방법</strong>을 실시간으로 알려줍니다.
+                </p>
+            </div>
+
+            <!-- Result -->
+            <div class="flex flex-col h-full">
+                <div class="impact-box border-green-600 bg-green-50/50 h-full flex flex-col justify-center">
+                    <h3 class="text-3xl font-black text-green-800 mb-6">CEO를 위한 핵심 요약</h3>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xl font-bold text-slate-500 block mb-1">비용 절감</span>
+                            <p class="text-2xl font-bold text-slate-800">생산 비용 <span class="text-green-600">수천억 원 절감</span></p>
+                        </div>
+                        <div>
+                            <span class="text-xl font-bold text-slate-500 block mb-1">효율성</span>
+                            <p class="text-2xl font-bold text-slate-800">데이터 분석 시간 <span class="text-green-600">90% 단축</span></p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-green-200">
+                        <p class="text-lg font-medium text-slate-700">
+                            "데이터를 찾는 시간을 줄이고,<br>
+                            <strong>데이터를 해석하는 시간</strong>을 늘렸습니다."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- CASE 3: HD HYUNDAI (Domestic) -->
+    <!-- ========================================== -->
+    <div class="slide" style="border-color: #064E3B;">
+        <i class="fas fa-ship bg-icon text-teal-800"></i>
+        
+        <div class="mb-6">
+            <span class="case-tag bg-teal-100 text-teal-900">국내 성공 사례 1</span>
+            <span class="company-logo-placeholder text-teal-800">HD 현대 (현대중공업)</span>
+            <h1 class="text-slate-900">"여의도 3배 크기 조선소를 한 눈에"</h1>
+        </div>
+
+        <div class="grid grid-cols-2 gap-16 h-full">
+            <!-- Problem -->
+            <div>
+                <h2 class="text-red-600"><i class="fas fa-exclamation-triangle mr-3"></i>도입 전 고민 (Pain Point)</h2>
+                <p>
+                    조선소는 너무 넓고 공정이 복잡해서, <strong>"지금 어디서 무슨 작업이 늦어지는지"</strong> 파악하기 어려웠습니다.
+                    각 부서(설계, 생산, 조달)가 서로 다른 엑셀 파일로 소통하여 오차가 발생했습니다.
+                </p>
+
+                <h2 class="text-teal-700"><i class="fas fa-check-circle mr-3"></i>팔란티어 활용 (FOS 프로젝트)</h2>
+                <p>
+                    <strong>'눈에 보이는 조선소'</strong>를 구현했습니다.
+                    팔란티어(Foundry)를 통해 설계 도면부터 자재 위치, 작업 진행률을 실시간으로 연결하여 <strong>공정 지연을 미리 예측</strong>합니다.
+                </p>
+            </div>
+
+            <!-- Result -->
+            <div class="flex flex-col h-full">
+                <div class="impact-box border-teal-800 bg-teal-50/50 h-full flex flex-col justify-center">
+                    <h3 class="text-3xl font-black text-teal-900 mb-6">CEO를 위한 핵심 요약</h3>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xl font-bold text-slate-500 block mb-1">혁신 목표</span>
+                            <p class="text-2xl font-bold text-slate-800">2030년까지 <span class="text-teal-700">스마트 조선소</span> 완성</p>
+                        </div>
+                        <div>
+                            <span class="text-xl font-bold text-slate-500 block mb-1">협력 관계</span>
+                            <p class="text-2xl font-bold text-slate-800">단순 도입을 넘어 <span class="text-slate-600">JV(합작사) 설립</span></p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-teal-200">
+                        <p class="text-lg font-medium text-slate-700">
+                            "조선업은 더 이상 땀 흘리는 제조업이 아닙니다.<br>
+                            <strong>데이터로 배를 짓는 첨단 산업</strong>입니다."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- CASE 4: DOOSAN (Domestic) -->
+    <!-- ========================================== -->
+    <div class="slide" style="border-color: #B91C1C;">
+        <i class="fas fa-hard-hat bg-icon text-red-900"></i>
+        
+        <div class="mb-6">
+            <span class="case-tag bg-red-100 text-red-900">국내 성공 사례 2</span>
+            <span class="company-logo-placeholder text-red-800">두산 (Doosan)</span>
+            <h1 class="text-slate-900">"글로벌 공급망과 품질을 꽉 잡다"</h1>
+        </div>
+
+        <div class="grid grid-cols-2 gap-16 h-full">
+            <!-- Problem -->
+            <div>
+                <h2 class="text-red-600"><i class="fas fa-exclamation-triangle mr-3"></i>도입 전 고민 (Pain Point)</h2>
+                <p>
+                    전 세계에 퍼져 있는 공장과 부품 공급사들 때문에 <strong>공급망 관리</strong>가 어려웠습니다.
+                    또한, 건설 장비의 <strong>품질 이슈가 발생했을 때 원인을 추적</strong>하는 데 시간이 많이 걸렸습니다.
+                </p>
+
+                <h2 class="text-red-700"><i class="fas fa-check-circle mr-3"></i>팔란티어 활용 (DI 360)</h2>
+                <p>
+                    자재 조달부터 생산, 품질, 판매까지의 <strong>Value Chain 전체 데이터를 통합</strong>했습니다.
+                    "미국 공장에 부품이 언제 도착할지", "특정 부품 불량률이 높은지" 한눈에 봅니다.
+                </p>
+            </div>
+
+            <!-- Result -->
+            <div class="flex flex-col h-full">
+                <div class="impact-box border-red-800 bg-red-50/50 h-full flex flex-col justify-center">
+                    <h3 class="text-3xl font-black text-red-900 mb-6">CEO를 위한 핵심 요약</h3>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xl font-bold text-slate-500 block mb-1">재고 관리</span>
+                            <p class="text-2xl font-bold text-slate-800">글로벌 재고 <span class="text-red-600">실시간 최적화</span></p>
+                        </div>
+                        <div>
+                            <span class="text-xl font-bold text-slate-500 block mb-1">업무 문화</span>
+                            <p class="text-2xl font-bold text-slate-800">감(Feel)이 아닌 <span class="text-slate-600">데이터 기반 의사결정</span></p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-red-200">
+                        <p class="text-lg font-medium text-slate-700">
+                            "디지털 전환(DT)은 선택이 아닙니다.<br>
+                            <strong>글로벌 생존을 위한 필수 무기</strong>입니다."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Palantir 5대 핵심 솔루션 (Large Font)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background-color: #333; /* Dark background for presentation mode preview */
+            font-family: 'Noto Sans KR', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 0;
+            gap: 50px;
+        }
+        
+        /* Slide Style - Optimized for Readability */
+        .slide {
+            background: white;
+            width: 297mm; /* A4 Landscape */
+            height: 210mm;
+            padding: 15mm 20mm; /* Adjusted padding */
+            box-sizing: border-box;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-bottom: 15px solid; /* Thicker bottom bar */
+        }
+
+        /* Typography Scaled Up */
+        h1 { font-size: 46px; font-weight: 900; line-height: 1.2; letter-spacing: -1px; margin-bottom: 5px; }
+        h2 { font-size: 28px; font-weight: 800; margin-bottom: 12px; margin-top: 25px; display: flex; align-items: center; }
+        p { font-size: 21px; line-height: 1.6; color: #334155; word-break: keep-all; }
+        
+        /* Components */
+        .tag {
+            display: inline-block; padding: 6px 16px; border-radius: 999px;
+            font-size: 16px; font-weight: 800; margin-bottom: 10px; letter-spacing: 0.5px;
+        }
+
+        .analogy-box {
+            background: #F8FAFC; border-radius: 20px; padding: 0 30px;
+            text-align: center; border: 3px dashed;
+            flex-grow: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            height: 100%;
+        }
+
+        .groupware-point {
+            margin-top: auto;
+            padding: 20px; border-radius: 12px;
+            font-size: 20px; font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .icon-header { font-size: 80px; opacity: 0.2; position: absolute; top: 30px; right: 40px; }
+
+        /* Print Settings */
+        @media print {
+            body { background: none; padding: 0; gap: 0; }
+            .slide { width: 100%; height: 100vh; margin: 0; border-bottom: none; page-break-after: always; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 1: FOUNDRY (Blue) -->
+    <!-- ========================================== -->
+    <div class="slide" style="border-color: #2563EB;">
+        <!-- Header -->
+        <div class="border-b-4 border-slate-100 pb-5 mb-6 relative">
+            <span class="tag bg-blue-100 text-blue-700">Solution 01: Data OS</span>
+            <h1 class="text-slate-900">Palantir Foundry (파운드리)</h1>
+            <p class="text-blue-600 font-bold text-3xl">"회사의 디지털 쌍둥이 (Digital Twin)"</p>
+            <i class="fas fa-network-wired icon-header text-blue-700"></i>
+        </div>
+
+        <div class="grid grid-cols-2 gap-16 h-full">
+            <!-- Left: Description -->
+            <div class="flex flex-col justify-between">
+                <div>
+                    <h2 class="text-slate-800"><i class="fas fa-question-circle text-blue-500 mr-3 text-3xl"></i>무엇인가요?</h2>
+                    <p>
+                        회사 내 흩어진 <strong>모든 데이터(ERP, 엑셀, 메일)를 하나로 연결</strong>하여, 컴퓨터 안에 <span class="bg-yellow-200 px-1">우리 회사를 똑같이 복제해 놓은 운영체제</span>입니다.
+                    </p>
+
+                    <h2 class="text-slate-800"><i class="fas fa-check-circle text-blue-500 mr-3 text-3xl"></i>핵심 가치</h2>
+                    <p>
+                        "원자재값이 오르면 이익이 얼마나 줄까?" 같은 <strong>복잡한 시뮬레이션</strong>이 가능해집니다.
+                    </p>
+                </div>
+
+                <div class="groupware-point bg-blue-50 text-blue-900 border-l-8 border-blue-600">
+                    <strong>📢 그룹웨어 적용 포인트:</strong><br>
+                    에디터의 <strong>'백엔드 엔진'</strong>입니다. 임직원이 키워드만 치면 Foundry가 관련 데이터를 싹 모아옵니다.
+                </div>
+            </div>
+
+            <!-- Right: Analogy -->
+            <div class="analogy-box border-blue-300 bg-blue-50/50">
+                <div class="text-9xl mb-6">🏗️</div>
+                <h3 class="text-4xl font-black text-slate-800 mb-4">비유: "레고 조립판"</h3>
+                <p class="text-2xl text-slate-700 leading-relaxed font-medium">
+                    바닥에 널브러진 레고 조각들을<br>
+                    설계도에 맞춰 <strong>딱 맞게 조립해주는<br>'자동 조립 기계'</strong>입니다.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 2: GOTHAM (Red) -->
+    <!-- ========================================== -->
+    <div class="slide" style="border-color: #DC2626;">
+        <div class="border-b-4 border-slate-100 pb-5 mb-6 relative">
+            <span class="tag bg-red-100 text-red-700">Solution 02: Intelligence</span>
+            <h1 class="text-slate-900">Palantir Gotham (고담)</h1>
+            <p class="text-red-600 font-bold text-3xl">"위기 감지 레이더 (Crisis Radar)"</p>
+            <i class="fas fa-shield-alt icon-header text-red-700"></i>
+        </div>
+
+        <div class="grid grid-cols-2 gap-16 h-full">
+            <div class="flex flex-col justify-between">
+                <div>
+                    <h2 class="text-slate-800"><i class="fas fa-question-circle text-red-500 mr-3 text-3xl"></i>무엇인가요?</h2>
+                    <p>
+                        수많은 정보 속에서 <strong>'숨어있는 위험 신호'</strong>를 찾아내고, 사건의 <span class="bg-yellow-200 px-1">범인(문제 원인)을 끝까지 추적</span>하는 시스템입니다.
+                    </p>
+
+                    <h2 class="text-slate-800"><i class="fas fa-check-circle text-red-500 mr-3 text-3xl"></i>핵심 가치</h2>
+                    <p>
+                        횡령, 보안 사고, 공급망 위기 등 <strong>리스크를 사전에 탐지</strong>하여 경영진에게 알립니다.
+                    </p>
+                </div>
+
+                <div class="groupware-point bg-red-50 text-red-900 border-l-8 border-red-600">
+                    <strong>📢 그룹웨어 적용 포인트:</strong><br>
+                    경영진 전용 <strong>'위기 관리 대시보드'</strong>입니다. "자금이 어디로 새고 있지?"를 24시간 감시합니다.
+                </div>
+            </div>
+
+            <div class="analogy-box border-red-300 bg-red-50/50">
+                <div class="text-9xl mb-6">📡</div>
+                <h3 class="text-4xl font-black text-slate-800 mb-4">비유: "잠수함 레이더"</h3>
+                <p class="text-2xl text-slate-700 leading-relaxed font-medium">
+                    망망대해(빅데이터) 속에서<br>
+                    숨어있는 적군 잠수함(위험요소)을<br>
+                    <strong>'삐- 삐-' 소리내며 찾는 레이더</strong>입니다.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 3: AIP (Purple) -->
+    <!-- ========================================== -->
+    <div class="slide" style="border-color: #7C3AED;">
+        <div class="border-b-4 border-slate-100 pb-5 mb-6 relative">
+            <span class="tag bg-purple-100 text-purple-700">Solution 03: Generative AI</span>
+            <h1 class="text-slate-900">Palantir AIP (인공지능 플랫폼)</h1>
+            <p class="text-purple-600 font-bold text-3xl">"일 잘하는 AI 비서관 (Commander)"</p>
+            <i class="fas fa-robot icon-header text-purple-700"></i>
+        </div>
+
+        <div class="grid grid-cols-2 gap-16 h-full">
+            <div class="flex flex-col justify-between">
+                <div>
+                    <h2 class="text-slate-800"><i class="fas fa-question-circle text-purple-500 mr-3 text-3xl"></i>무엇인가요?</h2>
+                    <p>
+                        ChatGPT 같은 생성형 AI를 <strong>우리 회사 데이터와 보안망 안에서</strong> 안전하게 사용할 수 있게 만든 <span class="bg-yellow-200 px-1">기업 전용 AI</span>입니다.
+                    </p>
+
+                    <h2 class="text-slate-800"><i class="fas fa-check-circle text-purple-500 mr-3 text-3xl"></i>핵심 가치</h2>
+                    <p>
+                        단순 대화뿐만 아니라, "김대리, 재고 파악해서 발주 넣어"라고 시키면 <strong>실제로 업무를 수행</strong>합니다.
+                    </p>
+                </div>
+
+                <div class="groupware-point bg-purple-50 text-purple-900 border-l-8 border-purple-600">
+                    <strong>📢 그룹웨어 적용 포인트:</strong><br>
+                    에디터 옆에 붙는 <strong>'AI 사이드바'</strong>입니다. "이 보고서 요약해서 이메일 보내줘"를 즉시 처리합니다.
+                </div>
+            </div>
+
+            <div class="analogy-box border-purple-300 bg-purple-50/50">
+                <div class="text-9xl mb-6">🧙‍♂️</div>
+                <h3 class="text-4xl font-black text-slate-800 mb-4">비유: "마법사의 지팡이"</h3>
+                <p class="text-2xl text-slate-700 leading-relaxed font-medium">
+                    똑똑한 비서(AI)에게<br>
+                    <strong>실제로 일을 처리할 수 있는<br>마법 지팡이(실행 권한)</strong>를 쥔 셈입니다.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 4: APOLLO (Teal) -->
+    <!-- ========================================== -->
+    <div class="slide" style="border-color: #0D9488;">
+        <div class="border-b-4 border-slate-100 pb-5 mb-6 relative">
+            <span class="tag bg-teal-100 text-teal-700">Solution 04: DevOps / Delivery</span>
+            <h1 class="text-slate-900">Palantir Apollo (아폴로)</h1>
+            <p class="text-teal-600 font-bold text-3xl">"무중단 자율 관리 시스템 (Auto Pilot)"</p>
+            <i class="fas fa-sync-alt icon-header text-teal-700"></i>
+        </div>
+
+        <div class="grid grid-cols-2 gap-16 h-full">
+            <div class="flex flex-col justify-between">
+                <div>
+                    <h2 class="text-slate-800"><i class="fas fa-question-circle text-teal-500 mr-3 text-3xl"></i>무엇인가요?</h2>
+                    <p>
+                        소프트웨어를 클라우드, 본사 서버, 공장 PC까지 <strong>어디든 배포하고 24시간 관리</strong>해주는 <span class="bg-yellow-200 px-1">자동 관리 시스템</span>입니다.
+                    </p>
+
+                    <h2 class="text-slate-800"><i class="fas fa-check-circle text-teal-500 mr-3 text-3xl"></i>핵심 가치</h2>
+                    <p>
+                        시스템 업데이트하다가 에러 나서 업무 멈추는 일을 방지하며, <strong>전 계열사 동시 보안 패치</strong>가 가능합니다.
+                    </p>
+                </div>
+
+                <div class="groupware-point bg-teal-50 text-teal-900 border-l-8 border-teal-600">
+                    <strong>📢 그룹웨어 적용 포인트:</strong><br>
+                    <strong>'전산팀의 야근 방지 도구'</strong>입니다. 그룹웨어 서버가 죽지 않도록 AI가 스스로 고칩니다.
+                </div>
+            </div>
+
+            <div class="analogy-box border-teal-300 bg-teal-50/50">
+                <div class="text-9xl mb-6">🏎️</div>
+                <h3 class="text-4xl font-black text-slate-800 mb-4">비유: "F1 레이싱 정비팀"</h3>
+                <p class="text-2xl text-slate-700 leading-relaxed font-medium">
+                    자동차가 달리는 도중에도(업무 중)<br>
+                    <strong>멈추지 않고 타이어를 갈아주는(업데이트)<br>최고의 정비팀</strong>입니다.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SLIDE 5: NEXUS (Orange) -->
+    <!-- ========================================== -->
+    <div class="slide" style="border-color: #F97316;">
+        <div class="border-b-4 border-slate-100 pb-5 mb-6 relative">
+            <span class="tag bg-orange-100 text-orange-700">Solution 05: Connectivity</span>
+            <h1 class="text-slate-900">Palantir Nexus (넥서스)</h1>
+            <p class="text-orange-600 font-bold text-3xl">"기업 간 보안 고속도로 (Secure Bridge)"</p>
+            <i class="fas fa-handshake icon-header text-orange-700"></i>
+        </div>
+
+        <div class="grid grid-cols-2 gap-16 h-full">
+            <div class="flex flex-col justify-between">
+                <div>
+                    <h2 class="text-slate-800"><i class="fas fa-question-circle text-orange-500 mr-3 text-3xl"></i>무엇인가요?</h2>
+                    <p>
+                        우리 회사와 <strong>협력사/계열사의 시스템을 안전하게 연결</strong>하는 기술입니다. <span class="bg-yellow-200 px-1">데이터를 엑셀로 주고받을 필요가 없습니다.</span>
+                    </p>
+
+                    <h2 class="text-slate-800"><i class="fas fa-check-circle text-orange-500 mr-3 text-3xl"></i>핵심 가치</h2>
+                    <p>
+                        협력사의 부품 재고가 떨어지면 <strong>우리 그룹웨어에 바로 경고</strong>가 떠서 공급망 사고를 막습니다.
+                    </p>
+                </div>
+
+                <div class="groupware-point bg-orange-50 text-orange-900 border-l-8 border-orange-500">
+                    <strong>📢 그룹웨어 적용 포인트:</strong><br>
+                    <strong>'협력사 포털'</strong> 기능입니다. 외부 업체와 전화/메일 없이 데이터로 직접 소통합니다.
+                </div>
+            </div>
+
+            <div class="analogy-box border-orange-300 bg-orange-50/50">
+                <div class="text-9xl mb-6">🌉</div>
+                <h3 class="text-4xl font-black text-slate-800 mb-4">비유: "보안 무역 터널"</h3>
+                <p class="text-2xl text-slate-700 leading-relaxed font-medium">
+                    우리 집 안방을 다 보여주지 않고도,<br>
+                    이웃집과 물건을 주고받는<br>
+                    <strong>'안전하고 투명한 전용 터널'</strong>입니다.
+                </p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
