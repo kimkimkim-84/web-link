@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palantir Ontology Brief</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&family=Urbanist:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* 1. 기본 설정 (Reset & Base Styles) */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0f172a; /* 슬라이드 배경과 유사한 어두운 톤 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            min-height: 100vh;
+            padding: 40px 0;
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        /* 2. 슬라이드 컨테이너 (Slide Container) */
+        .slide-container {
+            width: 1280px;
+            height: 720px;
+            background-color: #111827; /* Deep Dark Background */
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            color: #f3f4f6;
+            flex-shrink: 0; /* 슬라이드 크기 고정 */
+        }
+
+        /* 배경 디자인 요소 (Subtle Background Gradient) */
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 80%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(17, 24, 39, 0) 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .slide-container > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 3. 타이포그래피 (Typography) */
+        h2.slide-title {
+            font-family: 'Pretendard', sans-serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 22px;
+            color: #94a3b8; /* Cool Grey */
+            font-weight: 400;
+            margin-bottom: 50px;
+        }
+
+        h3 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #60a5fa; /* Palantir Blue accent */
+            margin-bottom: 12px;
+        }
+
+        p, li {
+            font-size: 20px;
+            line-height: 1.6;
+            color: #d1d5db;
+        }
+
+        strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* 4. 레이아웃: 이미지 우측, 텍스트 좌측 (Slide 1) */
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            height: 100%;
+            align-items: center;
+        }
+
+        .text-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .bullet-point {
+            margin-bottom: 30px;
+            padding-left: 20px;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .bullet-point h3 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+        }
+
+        .bullet-point h3 span {
+            color: #3b82f6;
+            margin-right: 8px;
+        }
+
+        .bullet-point p {
+            font-size: 19px;
+            color: #9ca3af;
+        }
+
+        .image-wrapper {
+            width: 100%;
+            height: 450px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border: 1px solid #374151;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #1e293b;
+        }
+        
+        .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 5. 레이아웃: 타일 형태 (Slide 2) */
+        .tiled-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            height: 100%;
+            margin-top: 20px;
+        }
+
+        .tile {
+            background-color: #1f2937; /* Lighter dark background */
+            border: 1px solid #374151;
+            border-radius: 16px;
+            padding: 36px 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .tile:nth-child(2) {
+            background-color: #1e3a8a; /* Accent background for middle tile */
+            border-color: #1e40af;
+        }
+        
+        .tile:nth-child(2) h3, 
+        .tile:nth-child(2) p,
+        .tile:nth-child(2) i {
+            color: #ffffff;
+        }
+
+        .icon-box {
+            font-size: 48px;
+            margin-bottom: 24px;
+            color: #60a5fa;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tile h3 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            color: #f3f4f6;
+        }
+
+        .tile p {
+            font-size: 18px;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+
+        /* 구분선 스타일 */
+        .divider {
+            width: 60px;
+            height: 4px;
+            background-color: #3b82f6;
+            margin-bottom: 30px;
+            border-radius: 2px;
+        }
+
+        /* 슬라이드 번호 */
+        .slide-number {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            font-size: 16px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Slide 1: Introduction to Ontology -->
+    <div class="slide-container" id="slide1">
+        <h2 class="slide-title">팔란티어 온톨로지(Ontology)란?</h2>
+        <p class="subtitle">데이터를 비즈니스 언어로 바꾸는 '디지털 통역사'</p>
+        
+        <div class="content-area" style="flex-grow: 1;">
+            <div class="split-layout">
+                <div class="text-content">
+                    <div class="divider"></div>
+                    <div class="bullet-point">
+                        <h3><span>01</span> 비즈니스 언어로 번역</h3>
+                        <p>복잡한 데이터 코드를 '공장', '고객', '제품' 같은 <strong>직관적인 실무 용어</strong>로 자동 변환하여 누구나 쉽게 이해합니다.</p>
+                    </div>
+                    <div class="bullet-point">
+                        <h3><span>02</span> 디지털 트윈(Digital Twin)</h3>
+                        <p>기업의 모든 자산과 프로세스 간의 관계를 연결해 <strong>디지털 공간에 현실을 그대로 복제</strong>합니다.</p>
+                    </div>
+                    <div class="bullet-point">
+                        <h3><span>03</span> 즉각적인 행동 연결</h3>
+                        <p>단순한 조회를 넘어, 시뮬레이션을 돌리고 클릭 한 번으로 <strong>현장에 즉시 업무 지시</strong>를 내릴 수 있습니다.</p>
+                    </div>
+                </div>
+                <!-- 10줄 이내 설명 질문에 대한 시각화 -->
+                <div class="image-wrapper">
+                    <!-- Placeholder Image for robustness -->
+                    <img src="https://placehold.co/800x500/1e293b/60a5fa?text=Digital+Twin+Visualization&font=roboto" alt="Digital Twin concept visualization connecting data to physical assets">
+                </div>
+            </div>
+        </div>
+        <div class="slide-number">1 / 2</div>
+    </div>
+
+    <!-- Slide 2: Why it works (Connectivity) -->
+    <div class="slide-container" id="slide2">
+        <h2 class="slide-title">데이터 연결, 왜 온톨로지인가?</h2>
+        <p class="subtitle">기존 솔루션이 해결하지 못한 '연결'의 3가지 핵심 비결</p>
+
+        <div class="content-area" style="flex-grow: 1;">
+            <div class="tiled-container">
+                <!-- Tile 1 -->
+                <div class="tile">
+                    <div class="icon-box"><i class="fa-solid fa-language"></i></div>
+                    <h3>통합 번역기<br><span style="font-size:16px; font-weight:400; opacity:0.8;">(Semantic Layer)</span></h3>
+                    <p>서로 다른 시스템의 암호 같은 ID들을 <strong>'하나의 객체'</strong>로 통일합니다.<br>억지로 시스템을 붙이지 않아도 내용상 자연스럽게 연결됩니다.</p>
+                </div>
+                <!-- Tile 2 (Highlighted) -->
+                <div class="tile">
+                    <div class="icon-box"><i class="fa-solid fa-bolt"></i></div>
+                    <h3>읽기/쓰기 양방향 통합<br><span style="font-size:16px; font-weight:400; opacity:0.8;">(Kinetic Layer)</span></h3>
+                    <p>현황판만 보는 것이 아닙니다.<br>분석 결과를 원본 시스템에 <strong>다시 입력(Write-back)</strong>하여 데이터가 멈추지 않고 살아서 흐르게 합니다.</p>
+                </div>
+                <!-- Tile 3 -->
+                <div class="tile">
+                    <div class="icon-box"><i class="fa-solid fa-cubes"></i></div>
+                    <h3>레고형 구조<br><span style="font-size:16px; font-weight:400; opacity:0.8;">(Decoupling)</span></h3>
+                    <p>데이터와 기능을 <strong>독립된 블록</strong>처럼 관리합니다.<br>하부 시스템(ERP 등)이 바뀌어도 전체 연결은 끊어지지 않고 유연하게 유지됩니다.</p>
+                </div>
+            </div>
+        </div>
+        <div class="slide-number">2 / 2</div>
+    </div>
+
+</body>
+</html>
