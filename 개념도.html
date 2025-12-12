@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palantir Ecosystem Relationship Diagram (Light)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* 1. 기본 설정 (Reset & Base Styles) */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f8fafc; /* 밝은 배경 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 0;
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        /* 2. 슬라이드 컨테이너 (Slide Container) */
+        .slide-container {
+            width: 1280px;
+            height: 720px;
+            background-color: #ffffff; /* 흰색 배경 */
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            color: #1e293b; /* 어두운 텍스트 */
+        }
+
+        /* 배경 디자인 요소 (Subtle Background Gradient) */
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 80%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .slide-container > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 3. 타이포그래피 (Typography) */
+        h2.slide-title {
+            font-family: 'Pretendard', sans-serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: #0f172a; /* 아주 어두운 파랑/검정 */
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 22px;
+            color: #64748b; /* 밝은 회색 */
+            font-weight: 400;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        h4 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #475569;
+        }
+
+        .role {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: block;
+            font-weight: 700;
+        }
+
+        /* 4. 레이아웃: 생태계 다이어그램 (Ecosystem Diagram Diagram) */
+        .diagram-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            position: relative;
+        }
+
+        .diagram-grid {
+            display: grid;
+            grid-template-areas:
+                ". aip ."
+                "gotham ontology foundry"
+                ". apollo .";
+            grid-template-columns: 1fr 1.4fr 1fr;
+            grid-template-rows: auto auto auto;
+            gap: 40px;
+            width: 100%;
+            max-width: 1000px;
+            position: relative;
+        }
+
+        /* 5. 컴포넌트 스타일 (Component Styles) */
+        .diagram-item {
+            background-color: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 30px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .diagram-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 핵심 요소: Ontology */
+        .diagram-item.core {
+            grid-area: ontology;
+            border-color: #3b82f6; /* Palantir Blue */
+            background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+            transform: scale(1.1);
+            z-index: 3;
+        }
+        .diagram-item.core .icon-box { color: #3b82f6; }
+        .diagram-item.core h4 { color: #1e3a8a; }
+        .diagram-item.core .role { color: #3b82f6; }
+
+        /* Brain: AIP */
+        .diagram-item.aip {
+            grid-area: aip;
+            border-top: 4px solid #a855f7; /* Purple */
+        }
+        .diagram-item.aip .icon-box { color: #a855f7; }
+        .diagram-item.aip .role { color: #a855f7; }
+
+        /* Platforms: Gotham & Foundry */
+        .diagram-item.gotham {
+            grid-area: gotham;
+            border-left: 4px solid #10b981; /* Teal/Green */
+        }
+        .diagram-item.gotham .icon-box { color: #10b981; }
+        .diagram-item.gotham .role { color: #10b981; }
+
+        .diagram-item.foundry {
+            grid-area: foundry;
+            border-right: 4px solid #f59e0b; /* Amber/Orange */
+        }
+        .diagram-item.foundry .icon-box { color: #f59e0b; }
+        .diagram-item.foundry .role { color: #f59e0b; }
+
+        /* Infrastructure: Apollo */
+        .diagram-item.apollo {
+            grid-area: apollo;
+            border-bottom: 4px solid #ef4444; /* Red */
+        }
+        .diagram-item.apollo .icon-box { color: #ef4444; }
+        .diagram-item.apollo .role { color: #ef4444; }
+
+        .icon-box {
+            font-size: 40px;
+            margin-bottom: 16px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 6. 연결선 (Connectors) & Nexus */
+        .nexus-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Nexus Ring */
+        .nexus-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            border: 2px dashed #94a3b8;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: spin 60s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+
+        /* Nexus Labels */
+        .nexus-label {
+            position: absolute;
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            background-color: #f1f5f9;
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 4;
+        }
+        .nexus-label i { color: #64748b; }
+
+        /* 화살표 및 연결선 스타일 */
+        .connector {
+            position: absolute;
+            background-color: #cbd5e1;
+            z-index: 1;
+        }
+        .arrow-head {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            z-index: 1;
+        }
+
+        /* Ontology <-> AIP (Vertical) */
+        .conn-ontology-aip {
+            width: 4px;
+            height: 50px;
+            top: 24%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .arrow-aip-up {
+            border-width: 0 8px 12px 8px;
+            border-color: transparent transparent #cbd5e1 transparent;
+            top: 22%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .arrow-ontology-down {
+            border-width: 12px 8px 0 8px;
+            border-color: #cbd5e1 transparent transparent transparent;
+            top: 36%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Ontology <-> Apollo (Vertical) */
+        .conn-ontology-apollo {
+            width: 4px;
+            height: 50px;
+            bottom: 24%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .arrow-ontology-up {
+            border-width: 0 8px 12px 8px;
+            border-color: transparent transparent #cbd5e1 transparent;
+            bottom: 36%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .arrow-apollo-down {
+            border-width: 12px 8px 0 8px;
+            border-color: #cbd5e1 transparent transparent transparent;
+            bottom: 22%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Gotham <-> Ontology <-> Foundry (Horizontal) */
+        .conn-horizontal {
+            height: 4px;
+            width: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .conn-gotham-ontology { left: 28%; }
+        .conn-ontology-foundry { right: 28%; }
+
+        .arrow-left {
+            border-width: 8px 12px 8px 0;
+            border-color: transparent #cbd5e1 transparent transparent;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .arrow-right {
+            border-width: 8px 0 8px 12px;
+            border-color: transparent transparent transparent #cbd5e1;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Relationship Labels */
+        .rel-label {
+            position: absolute;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            background-color: #f8fafc;
+            padding: 4px 8px;
+            border-radius: 4px;
+            z-index: 2;
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="slide-container">
+        <h2 class="slide-title">팔란티어 생태계 핵심 관계도</h2>
+        <p class="subtitle">온톨로지를 중심으로 한 5대 요소의 유기적 연결</p>
+
+        <div class="content-area" style="flex-grow: 1;">
+            <div class="diagram-wrapper">
+                
+                <!-- Nexus & Connectors -->
+                <div class="nexus-container">
+                    <div class="nexus-ring"></div>
+                    
+                    <!-- Nexus Labels -->
+                    <div class="nexus-label" style="top: 20%; right: 15%;">
+                        <i class="fa-solid fa-network-wired"></i>
+                        <span>Nexus: 끊김 없는 데이터 동기화</span>
+                    </div>
+                    <div class="nexus-label" style="bottom: 20%; left: 15%;">
+                        <i class="fa-solid fa-link"></i>
+                        <span>Nexus: 전체 생태계 연결 신경망</span>
+                    </div>
+
+                    <!-- Connectors & Arrows -->
+                    <!-- Ontology <-> AIP -->
+                    <div class="connector conn-ontology-aip"></div>
+                    <div class="arrow-head arrow-aip-up"></div>
+                    <div class="arrow-head arrow-ontology-down"></div>
+                    <div class="rel-label" style="top: 28%; left: 50%; transform: translate(-50%, -50%);">추론 및 지휘</div>
+
+                    <!-- Ontology <-> Apollo -->
+                    <div class="connector conn-ontology-apollo"></div>
+                    <div class="arrow-head arrow-ontology-up"></div>
+                    <div class="arrow-head arrow-apollo-down"></div>
+                    <div class="rel-label" style="bottom: 28%; left: 50%; transform: translate(-50%, -50%);">배포 및 관리</div>
+
+                    <!-- Gotham <-> Ontology -->
+                    <div class="connector conn-horizontal conn-gotham-ontology"></div>
+                    <div class="arrow-head arrow-left" style="left: 27%;"></div>
+                    <div class="arrow-head arrow-right" style="left: 34%;"></div>
+                    <div class="rel-label" style="top: 45%; left: 31%; transform: translate(-50%, -50%);">작전 수행</div>
+
+                    <!-- Ontology <-> Foundry -->
+                    <div class="connector conn-horizontal conn-ontology-foundry"></div>
+                    <div class="arrow-head arrow-left" style="right: 34%;"></div>
+                    <div class="arrow-head arrow-right" style="right: 27%;"></div>
+                    <div class="rel-label" style="top: 45%; right: 31%; transform: translate(50%, -50%);">비즈니스 운영</div>
+
+                </div>
+
+                <div class="diagram-grid">
+                    <!-- Top: AIP -->
+                    <div class="diagram-item aip">
+                        <span class="role">Brain (두뇌)</span>
+                        <div class="icon-box"><i class="fa-solid fa-brain"></i></div>
+                        <h4>AIP</h4>
+                        <p>온톨로지를 이해하고<br>행동을 추론하는 <strong>인공지능</strong></p>
+                    </div>
+
+                    <!-- Center: Ontology -->
+                    <div class="diagram-item core">
+                        <span class="role">Heart (심장 & 엔진)</span>
+                        <div class="icon-box"><i class="fa-solid fa-sitemap"></i></div>
+                        <h4>Ontology</h4>
+                        <p>모든 데이터와 자산의 의미를<br>정의하는 <strong>핵심 기반</strong></p>
+                    </div>
+
+                    <!-- Left: Gotham -->
+                    <div class="diagram-item gotham">
+                        <span class="role">Body (공공/국방)</span>
+                        <div class="icon-box"><i class="fa-solid fa-shield-halved"></i></div>
+                        <h4>Gotham</h4>
+                        <p>온톨로지 기반<br><strong>대테러/작전 플랫폼</strong></p>
+                    </div>
+
+                    <!-- Right: Foundry -->
+                    <div class="diagram-item foundry">
+                        <span class="role">Body (민간/기업)</span>
+                        <div class="icon-box"><i class="fa-solid fa-building"></i></div>
+                        <h4>Foundry</h4>
+                        <p>온톨로지 기반<br><strong>기업 운영 체제(OS)</strong></p>
+                    </div>
+
+                    <!-- Bottom: Apollo -->
+                    <div class="diagram-item apollo">
+                        <span class="role">Foundation (인프라)</span>
+                        <div class="icon-box"><i class="fa-solid fa-rocket"></i></div>
+                        <h4>Apollo</h4>
+                        <p>모든 환경(Edge/Cloud)에<br>소프트웨어를 <strong>배포/관리</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
