@@ -12,6 +12,7 @@ import os
 import re
 import ssl
 import threading
+from urllib.request import parse_http_list, parse_keqv_list
 from typing import Any
 
 import httpx
@@ -61,22 +62,72 @@ def validate_path(path: str) -> str:
     return p
 
 
-class SnwlDigestAuth(httpx.DigestAuth):
-    """Digest 인증. 웹 UI용(snwl) 로그인은 챌린지를 WWW-Authenticate 대신 X-Snwl-Authenticate로
-    보내므로(브라우저 로그인 팝업 방지), 그 값을 표준 헤더로 옮겨 httpx의 Digest 처리에 넘긴다."""
+def parse_digest(header: str) -> dict[str, str]:
+    """'Digest a="b", c=d' -> {"a": "b", "c": "d"}"""
+    _, _, fields = header.partition(" ")
+    return parse_keqv_list([f.strip() for f in parse_http_list(fields)])
 
-    def auth_flow(self, request):
-        flow = super().auth_flow(request)
-        req = next(flow)
-        while True:
-            response = yield req
-            if response.status_code == 401 and "www-authenticate" not in response.headers:
-                for v in response.headers.get_list("x-snwl-authenticate"):
-                    response.headers.setdefault("WWW-Authenticate", v)
-            try:
-                req = flow.send(response)
-            except StopIteration:
-                return
+
+DIGEST_HASHES = {"MD5": hashlib.md5, "SHA-256": hashlib.sha256, "SHA-512": hashlib.sha512}
+
+
+class SnwlDigestAuth(httpx.Auth):
+    """RFC 7616 Digest 인증(userhash 지원).
+
+    SonicOS 8.2의 웹 UI용(snwl) 로그인은 챌린지를 WWW-Authenticate 대신 X-Snwl-Authenticate로
+    보낸다(브라우저 로그인 팝업 방지). httpx 기본 DigestAuth는 이 헤더와 userhash를 지원하지 않는다.
+    """
+
+    def __init__(self, username: str, password: str) -> None:
+        self._user, self._password = username, password
+        self.challenge_info = ""  # 진단용: nonce/opaque 값을 뺀 챌린지 파라미터
+
+    def auth_flow(self, request: httpx.Request):
+        response = yield request
+        if response.status_code != 401:
+            return
+        header = next((v for name in ("www-authenticate", "x-snwl-authenticate")
+                       for v in response.headers.get_list(name) if v.lower().startswith("digest ")), None)
+        if header is None:
+            return
+        params = parse_digest(header)
+        self.challenge_info = ", ".join(f"{k}={'…' if k in ('nonce', 'opaque') else v}" for k, v in params.items())
+        request.headers["Authorization"] = self._build(request, params)
+        yield request
+
+    def _build(self, request: httpx.Request, c: dict[str, str]) -> str:
+        algorithm = c.get("algorithm", "MD5")
+        base = algorithm.upper().removesuffix("-SESS")
+        if base not in DIGEST_HASHES:
+            raise SonicWallError(f"지원하지 않는 Digest 알고리즘: {algorithm}")
+
+        def h(text: str) -> str:
+            return DIGEST_HASHES[base](text.encode("utf-8")).hexdigest()
+
+        realm, nonce = c.get("realm", ""), c.get("nonce", "")
+        uri = request.url.raw_path.decode()
+        cnonce, nc = os.urandom(16).hex(), "00000001"
+        ha1 = h(f"{self._user}:{realm}:{self._password}")
+        if algorithm.upper().endswith("-SESS"):
+            ha1 = h(f"{ha1}:{nonce}:{cnonce}")
+        ha2 = h(f"{request.method}:{uri}")
+        qops = [q.strip() for q in c.get("qop", "").split(",") if q.strip()]
+        if qops and "auth" not in qops:
+            raise SonicWallError(f"지원하지 않는 qop: {c.get('qop')}")
+        userhash = c.get("userhash", "").lower() == "true"
+        fields = {
+            "username": h(f"{self._user}:{realm}") if userhash else self._user,
+            "realm": realm, "nonce": nonce, "uri": uri, "algorithm": algorithm,
+            "response": h(f"{ha1}:{nonce}:{nc}:{cnonce}:auth:{ha2}") if qops else h(f"{ha1}:{nonce}:{ha2}"),
+        }
+        if "opaque" in c:
+            fields["opaque"] = c["opaque"]
+        if qops:
+            fields.update(qop="auth", nc=nc, cnonce=cnonce)
+        if userhash:
+            fields["userhash"] = "true"
+        bare = ("algorithm", "qop", "nc", "userhash")
+        return "Digest " + ", ".join(f"{k}={v}" if k in bare else f'{k}="{v}"' for k, v in fields.items())
 
 
 def challenge_summary(r: httpx.Response) -> str:
@@ -160,7 +211,8 @@ class SonicWallClient:
         # 장비가 Basic을 요구하면 Basic으로 대체한다.
         headers = self._base_headers()
         url = f"{API_BASE}/auth"
-        r = self._http.post(url, headers=headers, json=LOGIN_BODY, auth=SnwlDigestAuth(self._user, self._password))
+        digest = SnwlDigestAuth(self._user, self._password)
+        r = self._http.post(url, headers=headers, json=LOGIN_BODY, auth=digest)
         if r.status_code == 401 and "basic" in challenge_summary(r).lower():
             r = self._http.post(url, headers=headers, json=LOGIN_BODY, auth=(self._user, self._password))
         if r.status_code >= 400:
@@ -168,6 +220,7 @@ class SonicWallClient:
             raise SonicWallError(
                 f"로그인 실패: HTTP {r.status_code}"
                 + (f" | 챌린지: {hint}" if hint else "")
+                + (f" | 받은 Digest 챌린지: {digest.challenge_info}" if digest.challenge_info else "")
                 + (f" | 응답: {r.text[:300]}" if r.text else "")
                 + f" | 응답 헤더: {sorted(r.headers.keys())}"
                 + f" | 비교(본문/전용헤더 없는 일반 로그인): {self._plain_login_status()}")

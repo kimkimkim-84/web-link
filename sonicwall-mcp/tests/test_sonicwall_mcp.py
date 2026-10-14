@@ -1,11 +1,28 @@
 import sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+import hashlib
 import json
 import httpx, pytest
 import sonicwall_mcp as s
 
 TOKEN = "tok-123"
-CHALLENGE = 'Digest algorithm=SHA-256, realm="admin-users@fw", qop="auth", nonce="abc", opaque="xyz"'
+REALM = "admin-users@fw"
+CHALLENGE = f'Digest algorithm=SHA-256, realm="{REALM}", qop="auth", nonce="abc", opaque="xyz"'
+SNWL_CHALLENGE = CHALLENGE + ", userhash=true"
+
+
+def sha(x):
+    return hashlib.sha256(x.encode()).hexdigest()
+
+
+def digest_ok(header, method, user="u", password="p"):
+    """서버 쪽 RFC 7616 검증(userhash 포함)."""
+    f = s.parse_digest(header)
+    expected_user = sha(f"{user}:{REALM}") if f.get("userhash") == "true" else user
+    if f.get("username") != expected_user or f.get("nonce") != "abc" or f.get("opaque") != "xyz":
+        return False
+    ha1, ha2 = sha(f"{user}:{REALM}:{password}"), sha(f"{method}:{f['uri']}")
+    return f["response"] == sha(f"{ha1}:abc:{f['nc']}:{f['cnonce']}:{f['qop']}:{ha2}")
 
 
 class FakeFirewall:
@@ -25,11 +42,14 @@ class FakeFirewall:
         self.calls.append((req.method, req.url.path))
         auth = req.headers.get("authorization", "")
         if req.url.path.endswith("/auth") and req.method == "POST":
+            snwl = req.headers.get("x-snwl-api-scope") == "extended"
             if not auth.startswith("Digest "):
-                # 웹 UI용 로그인(extended)은 챌린지를 전용 헤더로 보낸다(실측)
-                name = "X-Snwl-Authenticate" if req.headers.get("x-snwl-api-scope") == "extended" else "WWW-Authenticate"
-                return httpx.Response(401, headers={name: CHALLENGE})
-            assert "algorithm=SHA-256" in auth and 'username="u"' in auth
+                # 웹 UI용 로그인(extended)은 챌린지를 전용 헤더로, userhash를 요구하며 보낸다
+                if snwl:
+                    return httpx.Response(401, headers={"X-Snwl-Authenticate": SNWL_CHALLENGE})
+                return httpx.Response(401, headers={"WWW-Authenticate": CHALLENGE})
+            if not digest_ok(auth, "POST") or (snwl and "userhash=true" not in auth):
+                return httpx.Response(401, json={"status": {"info": [{"code": "E_UNAUTHORIZED", "auth_code": "API_AUTH_REMOTE_USER"}]}})
             info = {"code": "E_OK", "message": "Login as a user.", "read_only": "Yes"}
             body = json.loads(req.content or b"{}")
             if body.get("snwl") and req.headers.get("origin") != "https://fw":
@@ -157,3 +177,19 @@ def test_challenge_summary_hides_nonce():
     r = httpx.Response(401, headers={"X-Snwl-Authenticate": CHALLENGE})
     out = s.challenge_summary(r)
     assert "SHA-256" in out and "abc" not in out and "xyz" not in out
+
+
+def test_wrong_password_rejected_by_digest_check():
+    fw = FakeFirewall()
+    http = httpx.Client(base_url="https://fw", transport=httpx.MockTransport(fw))
+    c = s.SonicWallClient(client=http, user="u", password="WRONG")
+    with pytest.raises(s.SonicWallError, match="받은 Digest 챌린지: .*userhash=true") as e:
+        c.get("version")
+    assert "abc" not in str(e.value) and "xyz" not in str(e.value)  # nonce/opaque 비노출
+
+
+def test_digest_without_userhash():
+    req = httpx.Request("POST", "https://fw/api/sonicos/auth")
+    a = s.SnwlDigestAuth("u", "p")
+    hdr = a._build(req, s.parse_digest(CHALLENGE))
+    assert 'username="u"' in hdr and "userhash" not in hdr and digest_ok(hdr, "POST")
