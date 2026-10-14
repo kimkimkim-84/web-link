@@ -58,3 +58,20 @@ def test_only_get_is_ever_sent():
 def test_truncate_list():
     out = s.render({"items": list(range(500))}, limit=10)
     assert "500개 중 10개" in out
+
+
+def test_pin_match_and_mismatch(monkeypatch):
+    fp = "ab" * 32
+    monkeypatch.setattr(s, "server_cert_fingerprint", lambda h, p: fp)
+    http = httpx.Client(base_url="https://fw", transport=httpx.MockTransport(lambda r: httpx.Response(200, json={"ok": 1})))
+    c = s.SonicWallClient(client=http, user="u", password="p")
+    c._pin, c._host, c._port = s.normalize_fp(fp.upper()), "fw", 443
+    assert c.get("version") == {"ok": 1}
+
+    sent = []
+    http2 = httpx.Client(base_url="https://fw", transport=httpx.MockTransport(lambda r: sent.append(r) or httpx.Response(200, json={})))
+    c2 = s.SonicWallClient(client=http2, user="u", password="p")
+    c2._pin, c2._host, c2._port = "cd" * 32, "fw", 443
+    with pytest.raises(s.SonicWallError, match="지문 불일치"):
+        c2.get("version")
+    assert sent == []  # 지문이 다르면 계정 정보를 보내지 않는다

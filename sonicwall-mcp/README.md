@@ -19,7 +19,7 @@ SonicWall 8세대(SonicOS 8) 방화벽의 REST API(`/api/sonicos`)를 Claude에 
 - 경로 허용 목록(`ALLOWED_PREFIXES`): 인증·관리자·설정내보내기 등은 조회 불가
 - 응답의 password / secret / psk / token 등 민감 키는 `***REDACTED***` 처리
 - 큰 응답은 항목 수(limit)와 글자 수로 잘라 컨텍스트 폭주 방지
-- TLS 검증 기본 ON (사설 CA는 `SONICWALL_CA_BUNDLE`)
+- TLS 검증 기본 ON. 자체서명 인증서는 **지문 고정**(`SONICWALL_CERT_SHA256`)으로 처리하며, 지문이 다르면 계정 정보를 보내기 전에 중단(사설 CA는 `SONICWALL_CA_BUNDLE`)
 
 ## 대상 환경
 - 목표 장비: NSa 3800 / SonicOS 8.2.2-8015-R9870 (Gen 8)
@@ -54,6 +54,14 @@ Claude Desktop(`claude_desktop_config.json`):
   "env": {"SONICWALL_HOST": "192.168.1.1", "SONICWALL_USER": "mcp-readonly", "SONICWALL_PASSWORD": "***"}
 }}}
 ```
+
+## 자체서명 인증서 (CERTIFICATE_VERIFY_FAILED)
+```powershell
+python fetch_cert.py <방화벽 IP>          # SHA-256 지문 출력
+$env:SONICWALL_CERT_SHA256="<출력된 지문>"  # 방화벽 화면의 인증서 지문과 대조 후 설정
+python check.py
+```
+Claude Code 등록 시에는 `-e SONICWALL_CERT_SHA256=<지문>`을 추가한다.
 
 ## 도구
 `get_version`, `list_zones`, `list_interfaces`, `list_address_objects`, `list_service_objects`,

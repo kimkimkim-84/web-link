@@ -5,9 +5,11 @@ SonicOS REST API(/api/sonicos)를 감싸며 GET 요청만 보낸다.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
+import ssl
 import threading
 from typing import Any
 
@@ -52,10 +54,22 @@ def validate_path(path: str) -> str:
     return p
 
 
+def normalize_fp(fp: str) -> str:
+    return re.sub(r"[^0-9a-f]", "", fp.lower())
+
+
+def server_cert_fingerprint(host: str, port: int) -> str:
+    """서버 인증서(DER)의 SHA-256 지문. 검증 없이 인증서만 가져온다(로그인 정보는 보내지 않음)."""
+    pem = ssl.get_server_certificate((host, port))
+    return hashlib.sha256(ssl.PEM_cert_to_DER_cert(pem)).hexdigest()
+
+
 class SonicWallClient:
     """세션 로그인(POST /auth) 후 GET만 수행하는 얇은 클라이언트."""
 
     def __init__(self, client: httpx.Client | None = None, user: str | None = None, password: str | None = None):
+        self._pin: str | None = None
+        self._host = self._port = None
         self._lock = threading.Lock()
         self._user = user if user is not None else os.environ.get("SONICWALL_USER", "")
         self._password = password if password is not None else os.environ.get("SONICWALL_PASSWORD", "")
@@ -67,11 +81,30 @@ class SonicWallClient:
         if not host:
             raise SonicWallError("SONICWALL_HOST 환경변수가 필요합니다.")
         port = os.environ.get("SONICWALL_PORT", "443")
-        verify: bool | str = os.environ.get("SONICWALL_CA_BUNDLE") or \
+        verify: bool | str | ssl.SSLContext = os.environ.get("SONICWALL_CA_BUNDLE") or \
             os.environ.get("SONICWALL_VERIFY_TLS", "true").lower() != "false"
+        pin = os.environ.get("SONICWALL_CERT_SHA256")
+        if pin:
+            # 자체서명 인증서: CA 검증 대신 지문 고정. 로그인 전에 지문이 다르면 중단한다.
+            self._pin, self._host, self._port = normalize_fp(pin), host, int(port)
+            if len(self._pin) != 64:
+                raise SonicWallError("SONICWALL_CERT_SHA256은 SHA-256 지문(64자리 16진수)이어야 합니다.")
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            verify = ctx
         self._http = httpx.Client(base_url=f"https://{host}:{port}", verify=verify, timeout=20.0)
 
+    def _check_pin(self) -> None:
+        if self._pin is None or self._host is None:
+            return
+        actual = server_cert_fingerprint(self._host, self._port)
+        if actual != self._pin:
+            raise SonicWallError(
+                f"인증서 지문 불일치(중간자 공격 또는 인증서 교체 가능성). 기대={self._pin} 실제={actual}")
+
     def _login(self) -> None:
+        self._check_pin()  # 계정 정보를 보내기 전에 서버를 확인
         if not (self._user and self._password):
             raise SonicWallError("SONICWALL_USER / SONICWALL_PASSWORD 환경변수가 필요합니다.")
         r = self._http.post(f"{API_BASE}/auth", auth=(self._user, self._password))
