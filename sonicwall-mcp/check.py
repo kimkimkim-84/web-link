@@ -55,25 +55,42 @@ def jwt_summary(tok: str) -> None:
             print(f"  유효기간(exp-iat): {data['exp'] - data['iat']}초")
 
 
-def same_conn(a: httpx.Response, b: httpx.Response):
-    sa, sb = a.extensions.get("network_stream"), b.extensions.get("network_stream")
-    return "알수없음" if sa is None or sb is None else sa is sb
+BROWSER_GET = {  # 웹 UI의 GET 요청 헤더(캡처 기준). GET에는 Origin이 없다.
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Connection": "keep-alive",
+    "Sec-Ch-Ua": '"Google Chrome";v="155", "Chromium";v="155", "Not(A:Brand";v="24"',
+    "Sec-Ch-Ua-Mobile": "?0",
+    "Sec-Ch-Ua-Platform": '"Windows"',
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-origin",
+    "User-Agent": CHROME_UA,
+}
 
 
-def trial(c, label: str, extra: dict[str, str]) -> None:
-    """extra 헤더를 로그인과 조회에 똑같이 붙여 시험한다. 같은 TCP 연결 재사용 여부도 표시."""
-    headers = {**c._base_headers(), **extra}
+def trial(c, label: str, login_extra: dict[str, str], get_extra: dict[str, str], drop_origin_on_get=False) -> None:
+    headers = {**c._base_headers(), **login_extra}
     r = c._http.post(f"{s.API_BASE}/auth", headers=headers, json=s.LOGIN_BODY, auth=(c._user, c._password))
-    tok = s.find_key(r.json(), "bearer_token") if r.status_code == 200 else None
-    print(f"\n[{label}] 로그인 {r.status_code}, 토큰 {'있음' if tok else '없음'}, "
-          f"응답 Connection 헤더={r.headers.get('connection')!r}, 응답 HTTP 버전={r.http_version}")
+    try:
+        body = r.json()
+    except ValueError:
+        body = {}
+    info = (body.get("status", {}).get("info") or [{}])[0] if isinstance(body, dict) else {}
+    tok = s.find_key(body, "bearer_token") if r.status_code == 200 else None
+    print(f"\n[{label}] 로그인 {r.status_code}, 토큰 {'있음' if tok else '없음'}")
+    print("  로그인 응답:", {k: info.get(k) for k in ("code", "message", "auth_code", "read_only",
+                                                   "privilege", "show_status", "security_warning") if k in info})
     if not tok:
         return
-    h = {**headers, "Authorization": f"Bearer {tok}"}
+    h = {**c._base_headers(), **get_extra, "Authorization": f"Bearer {tok}"}
+    if drop_origin_on_get:
+        h.pop("Origin", None)
     for path in ("version", GUI_PATH):
         g = c._http.get(f"{s.API_BASE}/{path}", headers=h)
-        print(f"  GET /{path.split('?')[0]:<32} -> {code_of(g)}  같은연결={same_conn(g, r)}")
-    c._http.delete(f"{s.API_BASE}/auth", headers=h)
+        print(f"  GET /{path.split('?')[0]:<32} -> {code_of(g)}")
+    d = c._http.delete(f"{s.API_BASE}/auth", headers=h)
+    print(f"  로그아웃 -> {code_of(d)}")
 
 
 def debug() -> int:
@@ -87,9 +104,9 @@ def debug() -> int:
     jwt_summary(tok)
     c._http.delete(f"{s.API_BASE}/auth", headers=c._headers())
 
-    trial(c, "기본", {})
-    trial(c, "keep-alive", {"Connection": "keep-alive"})
-    trial(c, "keep-alive + 브라우저 User-Agent", {"Connection": "keep-alive", "User-Agent": CHROME_UA})
+    trial(c, "기본", {}, {})
+    trial(c, "브라우저 헤더 전체 흉내", {k: v for k, v in BROWSER_GET.items() if k != "Accept"},
+          BROWSER_GET, drop_origin_on_get=True)
     c._logged_in = False
     c.close()
     return 0
