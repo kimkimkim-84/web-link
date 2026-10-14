@@ -75,3 +75,14 @@ def test_pin_match_and_mismatch(monkeypatch):
     with pytest.raises(s.SonicWallError, match="지문 불일치"):
         c2.get("version")
     assert sent == []  # 지문이 다르면 계정 정보를 보내지 않는다
+
+
+def test_login_failure_shows_server_reason():
+    def h(req):
+        return httpx.Response(401, headers={"WWW-Authenticate": "Basic realm=x"},
+                              json={"status": {"info": [{"message": "Bad credentials"}]}})
+
+    with pytest.raises(s.SonicWallError) as e:
+        make(h).get("version")
+    msg = str(e.value)
+    assert "401" in msg and "Basic realm" in msg and "Bad credentials" in msg

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import re
 import ssl
@@ -15,6 +16,8 @@ from typing import Any
 
 import httpx
 from mcp.server.fastmcp import FastMCP
+
+logging.getLogger("httpx").setLevel(logging.WARNING)  # 요청 로그에 주소가 남지 않게
 
 API_BASE = "/api/sonicos"
 MAX_CHARS = 60_000
@@ -109,7 +112,11 @@ class SonicWallClient:
             raise SonicWallError("SONICWALL_USER / SONICWALL_PASSWORD 환경변수가 필요합니다.")
         r = self._http.post(f"{API_BASE}/auth", auth=(self._user, self._password))
         if r.status_code >= 400:
-            raise SonicWallError(f"로그인 실패: HTTP {r.status_code}")
+            hint = r.headers.get("www-authenticate", "")
+            raise SonicWallError(
+                f"로그인 실패: HTTP {r.status_code}"
+                + (f" | WWW-Authenticate: {hint[:200]}" if hint else "")
+                + (f" | 응답: {r.text[:300]}" if r.text else ""))
         self._logged_in = True
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> Any:
