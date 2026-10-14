@@ -1,4 +1,4 @@
-"""로그인 이후 401 원인 진단 v3 (Bearer 토큰/세션 방식 탐색). GET + 로그인/로그아웃만 수행한다.
+"""로그인 이후 401 원인 진단 v4 (경로/세션/헤더 영향 비교). GET + 로그인/로그아웃만 수행한다.
 
 비밀번호·토큰·쿠키·nonce 값은 출력하지 않는다(길이만 표시). 출력 전체를 전달해도 된다.
 사용: SONICWALL_* 환경변수 설정 후  python diagnose.py
@@ -45,26 +45,31 @@ def main() -> None:
     h, user, pw = c._http, c._user, c._password
     c._check_pin()
 
-    for label in ("기본",):  # override는 다른 관리자의 설정 모드를 빼앗을 수 있어 사용하지 않는다
-        print(f"== 로그인 ({label}) ==")
-        r = h.post(f"{s.API_BASE}/auth", auth=httpx.DigestAuth(user, pw))
-        print("상태:", r.status_code, "| 응답 헤더:", sorted(r.headers.keys()), "| 쿠키:", [k.name for k in h.cookies.jar] or "없음")
-        leaves = []
-        try:
-            leaves = list(walk(r.json()))
-        except ValueError:
-            print("JSON 아님:", r.text[:120])
-        for p, v in leaves:
-            print(f"  {p} = {show(p, v)}")
-        cands = [(p, v) for p, v in leaves if TOKEN_HINT.search(p.split('.')[-1]) and isinstance(v, str) and v]
-        print("토큰 후보 필드:", [p for p, _ in cands] or "없음")
-        for p, tok in cands:
-            for name in ("Bearer",):
-                g = h.get(f"{s.API_BASE}/version", headers={**JSON, "Authorization": f"{name} {tok}"})
-                print(f"  → {p}를 '{name}'으로 GET /version: {status_of(g)}")
-        print("  → 로그인 직후 자격 증명 없이 GET:", {p_: status_of(h.get(f'{s.API_BASE}/{p_}', headers=JSON)) for p_ in PATHS})
-        h.delete(f"{s.API_BASE}/auth")
-        print()
+    r = h.post(f"{s.API_BASE}/auth", auth=httpx.DigestAuth(user, pw))
+    info = (r.json().get("status", {}).get("info") or [{}])[0]
+    print("== 로그인 ==", r.status_code, {k: info.get(k) for k in ("code", "message", "auth_code", "read_only", "privilege")})
+
+    def probe(label, path, creds=False, accept=True, ctype=False):
+        headers = dict(JSON) if accept else {}
+        if ctype:
+            headers["Content-Type"] = "application/json"
+        kw = {"auth": httpx.DigestAuth(user, pw)} if creds else {}
+        g = h.get(f"{s.API_BASE}/{path}", headers=headers, **kw)
+        extra = sorted(k for k in g.headers.keys() if k not in ("content-type", "content-length", "cache-control", "expires", "server", "x-content-type-options", "date"))
+        print(f"  {label:<44} -> {status_of(g)}  추가 응답 헤더: {extra or '없음'}")
+
+    print("\n== 로그인 직후 시험 (자격 증명 없음) ==")
+    probe("GET /auth", "auth")
+    probe("GET /version", "version")
+    probe("GET /no-such-path-xyz (존재하지 않는 경로)", "no-such-path-xyz")
+    print("\n== 요청마다 Digest ==")
+    probe("GET /auth", "auth", creds=True)
+    probe("GET /version", "version", creds=True)
+    probe("GET /version (Accept 헤더 없이)", "version", creds=True, accept=False)
+    probe("GET /version (+Content-Type: json)", "version", creds=True, ctype=True)
+    probe("GET /no-such-path-xyz", "no-such-path-xyz", creds=True)
+    probe("GET /zones", "zones", creds=True)
+    print("\n== 로그아웃 ==", h.delete(f"{s.API_BASE}/auth").status_code)
     h.close()
 
 
