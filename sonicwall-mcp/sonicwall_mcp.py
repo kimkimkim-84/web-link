@@ -20,8 +20,10 @@ from mcp.server.fastmcp import FastMCP
 logging.getLogger("httpx").setLevel(logging.WARNING)  # 요청 로그에 주소가 남지 않게
 
 API_BASE = "/api/sonicos"
-# SonicOS 8.2 웹 UI가 보내는 헤더. extended 범위로 로그인해야 bearer_token이 발급된다.
+# SonicOS 8.2 웹 UI와 같은 로그인 형식. 본문의 snwl=true 로 bearer_token이 발급된다.
+# override=false: 다른 관리자의 세션/설정 모드를 빼앗지 않는다. (config-mode 진입은 하지 않음)
 SNWL_HEADERS = {"X-Snwl-Api-Scope": "extended", "X-Snwl-Timer": "no-reset"}
+LOGIN_BODY = {"override": False, "snwl": True}
 MAX_CHARS = 60_000
 SECRET_KEY = re.compile(r"pass(word)?|secret|psk|shared_key|private_key|token|community|^key$", re.I)
 # 임의 조회 도구가 접근할 수 있는 경로. 인증/관리자/백업/설정 내보내기 계열은 제외.
@@ -120,13 +122,14 @@ class SonicWallClient:
         if not (self._user and self._password):
             raise SonicWallError("SONICWALL_USER / SONICWALL_PASSWORD 환경변수가 필요합니다.")
         self._token = None
-        # SonicOS 8.2: 웹 UI와 같이 X-Snwl-Api-Scope: extended 로 로그인해야 bearer_token을 받고,
-        # 이후 요청은 Authorization: Bearer <토큰>으로 인증한다. 로그인 자체는 Digest(SHA-256)가
-        # 기본이며, 장비가 Basic을 요구하면 Basic으로 대체한다.
+        # SonicOS 8.2: 웹 UI와 같은 헤더/본문으로 로그인해야 bearer_token을 받고, 이후 요청은
+        # Authorization: Bearer <토큰>으로 인증한다. 로그인 자체는 Digest(SHA-256)가 기본이며,
+        # 장비가 Basic을 요구하면 Basic으로 대체한다.
         headers = {"Accept": "application/json", **SNWL_HEADERS}
-        r = self._http.post(f"{API_BASE}/auth", headers=headers, auth=httpx.DigestAuth(self._user, self._password))
+        url = f"{API_BASE}/auth"
+        r = self._http.post(url, headers=headers, json=LOGIN_BODY, auth=httpx.DigestAuth(self._user, self._password))
         if r.status_code == 401 and "basic" in r.headers.get("www-authenticate", "").lower():
-            r = self._http.post(f"{API_BASE}/auth", headers=headers, auth=(self._user, self._password))
+            r = self._http.post(url, headers=headers, json=LOGIN_BODY, auth=(self._user, self._password))
         if r.status_code >= 400:
             hint = r.headers.get("www-authenticate", "")
             raise SonicWallError(

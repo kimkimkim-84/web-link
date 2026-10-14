@@ -1,5 +1,6 @@
 import sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+import json
 import httpx, pytest
 import sonicwall_mcp as s
 
@@ -10,7 +11,7 @@ CHALLENGE = 'Digest algorithm=SHA-256, realm="admin-users@fw", qop="auth", nonce
 class FakeFirewall:
     """NSa 3800 / SonicOS 8.2 실측 동작을 흉내 낸 모의 장비.
 
-    - POST /auth: Digest(SHA-256) 요구. X-Snwl-Api-Scope: extended 일 때만 bearer_token 발급
+    - POST /auth: Digest(SHA-256) 요구. extended 범위 + 본문 snwl=true 일 때만 bearer_token 발급
     - 그 외 경로: Authorization: Bearer <토큰> 이 없으면 401 E_UNAUTHORIZED
     """
 
@@ -28,7 +29,9 @@ class FakeFirewall:
                 return httpx.Response(401, headers={"WWW-Authenticate": CHALLENGE})
             assert "algorithm=SHA-256" in auth and 'username="u"' in auth
             info = {"code": "E_OK", "message": "Login as a user.", "read_only": "Yes"}
-            if req.headers.get("x-snwl-api-scope") == "extended":
+            body = json.loads(req.content or b"{}")
+            assert body.get("override") is False  # 다른 관리자 세션을 빼앗지 않음
+            if req.headers.get("x-snwl-api-scope") == "extended" and body.get("snwl") is True:
                 info["bearer_token"] = self.token
             return httpx.Response(200, json={"status": {"success": True, "info": [info]}})
         if auth != f"Bearer {self.token}":
@@ -123,3 +126,11 @@ def test_pin_match_and_mismatch(monkeypatch):
 def test_truncate_list():
     out = s.render({"items": list(range(500))}, limit=10)
     assert "500개 중 10개" in out
+
+
+def test_never_enters_config_mode():
+    fw = FakeFirewall()
+    c = make(fw)
+    c.get("zones")
+    c.close()
+    assert not any("config-mode" in path for _, path in fw.calls)
