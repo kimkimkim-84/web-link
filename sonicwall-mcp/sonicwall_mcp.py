@@ -156,6 +156,7 @@ class SonicWallClient:
     def __init__(self, client: httpx.Client | None = None, user: str | None = None, password: str | None = None):
         self._pin: str | None = None
         self._token: str | None = None
+        self.login_steps: list[str] = []
         self._host = self._port = None
         self._lock = threading.Lock()
         self._user = user if user is not None else os.environ.get("SONICWALL_USER", "")
@@ -201,11 +202,8 @@ class SonicWallClient:
             h["Authorization"] = f"Bearer {self._token}"
         return h
 
-    def _login(self) -> None:
-        self._check_pin()  # 계정 정보를 보내기 전에 서버를 확인
-        if not (self._user and self._password):
-            raise SonicWallError("SONICWALL_USER / SONICWALL_PASSWORD 환경변수가 필요합니다.")
-        self._token = None
+    def _authenticate(self) -> tuple[dict, str]:
+        """POST /auth 한 번. (응답 JSON, bearer_token)을 돌려준다."""
         # SonicOS 8.2: 웹 UI와 같은 헤더/본문으로 로그인해야 bearer_token을 받고, 이후 요청은
         # Authorization: Bearer <토큰>으로 인증한다. 웹 UI는 이 로그인을 Basic으로 한다(실측:
         # Digest는 API_AUTH_REMOTE_USER로 거부됨). Basic이 거부되면 Digest로 대체한다.
@@ -232,9 +230,34 @@ class SonicWallClient:
         self.login_keys = sorted({k for k, _ in iter_items(body)})  # 진단용(키 이름만)
         token = find_key(body, "bearer_token")
         if not token:
-            keys = sorted({k for k, _ in iter_items(body)})
-            raise SonicWallError(f"로그인은 성공했지만 응답에 bearer_token이 없습니다. 응답 키: {keys}")
-        self._token = str(token)
+            raise SonicWallError(f"로그인은 성공했지만 응답에 bearer_token이 없습니다. 응답 키: {self.login_keys}")
+        self._step("auth", r.status_code, body)
+        return body, str(token)
+
+    def _step(self, name: str, status: int, body: Any) -> None:
+        """진단용 로그인 단계 기록(코드/메시지만, 토큰 값 없음)."""
+        self.login_steps.append(f"{name}:{status}/{find_key(body, 'auth_code') or find_key(body, 'code')}")
+
+    def _login(self) -> None:
+        self._check_pin()  # 계정 정보를 보내기 전에 서버를 확인
+        if not (self._user and self._password):
+            raise SonicWallError("SONICWALL_USER / SONICWALL_PASSWORD 환경변수가 필요합니다.")
+        self._token = None
+        self.login_steps = []
+        body, self._token = self._authenticate()
+        if find_key(body, "auth_code") == "API_AUTH_USER_CAN_MGMT":
+            # 로컬 계정은 먼저 '사용자 모드'로 로그인된다(관리 API는 전부 401). 웹 UI의 Manage
+            # 버튼과 같이 start-management를 요청하면 재인증(API_AUTH_USER_REAUTH)을 요구하고,
+            # 다시 로그인하면 관리 모드 세션이 된다. 세션 모드만 바꾸며 설정은 바꾸지 않는다.
+            r = self._http.post(f"{API_BASE}/start-management", headers=self._headers())
+            try:
+                sm = r.json()
+            except ValueError:
+                sm = {}
+            self._step("start-management", r.status_code, sm)
+            if r.status_code >= 400:
+                raise SonicWallError(f"관리 모드 전환 실패: HTTP {r.status_code} {r.text[:200]}")
+            body, self._token = self._authenticate()
         self._logged_in = True
 
     def _plain_login_status(self) -> str:
@@ -259,7 +282,8 @@ class SonicWallClient:
                     continue
                 break
         if r.status_code >= 400:
-            raise SonicWallError(f"GET /{p} 실패: HTTP {r.status_code} {r.text[:300]}")
+            raise SonicWallError(f"GET /{p} 실패: HTTP {r.status_code} {r.text[:300]}"
+                                 f" | 로그인 단계: {' → '.join(self.login_steps)}")
         try:
             return r.json()
         except ValueError:

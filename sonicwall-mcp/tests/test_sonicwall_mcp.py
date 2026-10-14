@@ -196,3 +196,51 @@ def test_digest_without_userhash():
     a = s.SnwlDigestAuth("u", "p")
     hdr = a._build(req, s.parse_digest(CHALLENGE))
     assert 'username="u"' in hdr and "userhash" not in hdr and digest_ok(hdr, "POST")
+
+
+class LocalUserFirewall(FakeFirewall):
+    """로컬 계정 실측 흐름: 첫 로그인은 사용자 모드(USER_CAN_MGMT, 관리 API 401) →
+    start-management(REAUTH) → 재로그인하면 관리 모드 토큰."""
+
+    def __init__(self):
+        super().__init__()
+        self.mgmt_requested = False
+
+    def __call__(self, req):
+        auth = req.headers.get("authorization", "")
+        if req.url.path.endswith("/start-management"):
+            self.calls.append((req.method, req.url.path))
+            assert req.method == "POST" and auth == "Bearer user-tok"
+            self.mgmt_requested = True
+            return httpx.Response(200, json={"status": {"success": True, "info": [
+                {"code": "E_OK", "auth_code": "API_AUTH_USER_REAUTH", "message": "Re-authentication is required"}]}})
+        if req.url.path.endswith("/auth") and req.method == "POST" and not self.mgmt_requested:
+            r = super().__call__(req)
+            if r.status_code == 200:
+                return httpx.Response(200, json={"status": {"success": True, "info": [
+                    {"code": "E_OK", "auth_code": "API_AUTH_USER_CAN_MGMT", "message": "Login as a user.",
+                     "bearer_token": "user-tok"}]}})
+            return r
+        return super().__call__(req)
+
+
+def test_local_user_switches_to_management():
+    fw = LocalUserFirewall()
+    c = make(fw)
+    assert c.get("version") == {"firmware_version": "8.2.0"}
+    posts = [path for m, path in fw.calls if m == "POST"]
+    assert posts == ["/api/sonicos/auth", "/api/sonicos/start-management", "/api/sonicos/auth"]
+    assert c.login_steps == ["auth:200/API_AUTH_USER_CAN_MGMT", "start-management:200/API_AUTH_USER_REAUTH", "auth:200/E_OK"]
+    assert not any("config-mode" in p for _, p in fw.calls)
+
+
+def test_get_failure_reports_login_steps():
+    class StuckFirewall(LocalUserFirewall):
+        def __call__(self, req):
+            if req.url.path.endswith("/start-management"):
+                self.calls.append((req.method, req.url.path))
+                return httpx.Response(200, json={"status": {"info": [{"auth_code": "API_AUTH_USER_REAUTH"}]}})
+            return super().__call__(req)  # 재로그인해도 계속 사용자 모드
+
+    with pytest.raises(s.SonicWallError, match="로그인 단계: auth:200/API_AUTH_USER_CAN_MGMT → start-management"):
+        make(StuckFirewall()).get("version")

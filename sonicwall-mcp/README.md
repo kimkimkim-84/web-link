@@ -26,6 +26,9 @@ SonicWall 8세대(SonicOS 8) 방화벽의 REST API(`/api/sonicos`)를 Claude에 
    인증은 웹 UI처럼 **Basic**(이 로그인에서 Digest는 `API_AUTH_REMOTE_USER`로 거부됨, 실측). 비밀번호는 인증서 지문 확인 후 TLS 안에서만 전송.
    `override: false` 이므로 다른 관리자의 세션/설정 모드를 빼앗지 않으며, `config-mode` 에는 들어가지 않는다.
 2. 응답의 `bearer_token` 을 받아 이후 모든 요청에 `Authorization: Bearer <토큰>` 으로 사용
+   - 로컬 계정(`mcp-readonly` 등)은 먼저 **사용자 모드**(`API_AUTH_USER_CAN_MGMT`)로 로그인되어 관리 API가 모두 401이다.
+     웹 UI의 Manage 버튼과 같이 `POST /api/sonicos/start-management` → 재인증 요구(`API_AUTH_USER_REAUTH`) → 다시 로그인하면 관리 모드가 된다.
+     이 전환은 세션 모드만 바꾸며 설정은 바꾸지 않는다.
 3. 토큰 만료(401) 시 한 번 재로그인, 종료 시 `DELETE /auth` 로 로그아웃
 
 세션 쿠키는 쓰지 않으며, 위 헤더 없이 로그인하면 토큰이 발급되지 않아 모든 조회가 401(E_UNAUTHORIZED)이 된다.
