@@ -20,6 +20,8 @@ from mcp.server.fastmcp import FastMCP
 logging.getLogger("httpx").setLevel(logging.WARNING)  # 요청 로그에 주소가 남지 않게
 
 API_BASE = "/api/sonicos"
+# SonicOS 8.2 웹 UI가 보내는 헤더. extended 범위로 로그인해야 bearer_token이 발급된다.
+SNWL_HEADERS = {"X-Snwl-Api-Scope": "extended", "X-Snwl-Timer": "no-reset"}
 MAX_CHARS = 60_000
 SECRET_KEY = re.compile(r"pass(word)?|secret|psk|shared_key|private_key|token|community|^key$", re.I)
 # 임의 조회 도구가 접근할 수 있는 경로. 인증/관리자/백업/설정 내보내기 계열은 제외.
@@ -68,11 +70,11 @@ def server_cert_fingerprint(host: str, port: int) -> str:
 
 
 class SonicWallClient:
-    """세션 로그인(POST /auth) 후 GET만 수행하는 얇은 클라이언트."""
+    """로그인(POST /auth)으로 bearer_token을 받아 GET만 수행하는 얇은 클라이언트."""
 
     def __init__(self, client: httpx.Client | None = None, user: str | None = None, password: str | None = None):
         self._pin: str | None = None
-        self._auth = None
+        self._token: str | None = None
         self._host = self._port = None
         self._lock = threading.Lock()
         self._user = user if user is not None else os.environ.get("SONICWALL_USER", "")
@@ -107,24 +109,39 @@ class SonicWallClient:
             raise SonicWallError(
                 f"인증서 지문 불일치(중간자 공격 또는 인증서 교체 가능성). 기대={self._pin} 실제={actual}")
 
+    def _headers(self) -> dict[str, str]:
+        h = {"Accept": "application/json", **SNWL_HEADERS}
+        if self._token:
+            h["Authorization"] = f"Bearer {self._token}"
+        return h
+
     def _login(self) -> None:
         self._check_pin()  # 계정 정보를 보내기 전에 서버를 확인
         if not (self._user and self._password):
             raise SonicWallError("SONICWALL_USER / SONICWALL_PASSWORD 환경변수가 필요합니다.")
-        # SonicOS 8은 보통 Digest(SHA-256)를 요구한다. Digest를 먼저 시도하고, 서버가 Basic을
-        # 요구하면 Basic으로 대체한다.
-        digest = httpx.DigestAuth(self._user, self._password)
-        r = self._http.post(f"{API_BASE}/auth", auth=digest)
-        self._auth: httpx.Auth | tuple[str, str] | None = digest
+        self._token = None
+        # SonicOS 8.2: 웹 UI와 같이 X-Snwl-Api-Scope: extended 로 로그인해야 bearer_token을 받고,
+        # 이후 요청은 Authorization: Bearer <토큰>으로 인증한다. 로그인 자체는 Digest(SHA-256)가
+        # 기본이며, 장비가 Basic을 요구하면 Basic으로 대체한다.
+        headers = {"Accept": "application/json", **SNWL_HEADERS}
+        r = self._http.post(f"{API_BASE}/auth", headers=headers, auth=httpx.DigestAuth(self._user, self._password))
         if r.status_code == 401 and "basic" in r.headers.get("www-authenticate", "").lower():
-            self._auth = (self._user, self._password)
-            r = self._http.post(f"{API_BASE}/auth", auth=self._auth)
+            r = self._http.post(f"{API_BASE}/auth", headers=headers, auth=(self._user, self._password))
         if r.status_code >= 400:
             hint = r.headers.get("www-authenticate", "")
             raise SonicWallError(
                 f"로그인 실패: HTTP {r.status_code}"
                 + (f" | WWW-Authenticate: {hint[:200]}" if hint else "")
                 + (f" | 응답: {r.text[:300]}" if r.text else ""))
+        try:
+            body = r.json()
+        except ValueError:
+            body = {}
+        token = find_key(body, "bearer_token")
+        if not token:
+            keys = sorted({k for k, _ in iter_items(body)})
+            raise SonicWallError(f"로그인은 성공했지만 응답에 bearer_token이 없습니다. 응답 키: {keys}")
+        self._token = str(token)
         self._logged_in = True
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> Any:
@@ -133,12 +150,8 @@ class SonicWallClient:
             for attempt in (1, 2):
                 if not self._logged_in:
                     self._login()
-                r = self._http.get(f"{API_BASE}/{p}", params=params, headers={"Accept": "application/json"})
-                if r.status_code == 401 and self._auth is not None:
-                    # 세션 쿠키가 없거나 만료: 요청 단위 인증으로 한 번 더 시도
-                    r = self._http.get(f"{API_BASE}/{p}", params=params,
-                                       headers={"Accept": "application/json"}, auth=self._auth)
-                if r.status_code == 401 and attempt == 1:
+                r = self._http.get(f"{API_BASE}/{p}", params=params, headers=self._headers())
+                if r.status_code == 401 and attempt == 1:  # 토큰 만료: 한 번 재로그인
                     self._logged_in = False
                     continue
                 break
@@ -152,12 +165,27 @@ class SonicWallClient:
     def close(self) -> None:
         try:
             if self._logged_in:
-                self._http.delete(f"{API_BASE}/auth")
+                self._http.delete(f"{API_BASE}/auth", headers=self._headers())
         except httpx.HTTPError:
             pass
         finally:
             self._logged_in = False
+            self._token = None
             self._http.close()
+
+
+def iter_items(obj: Any):
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            yield k, v
+            yield from iter_items(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            yield from iter_items(v)
+
+
+def find_key(obj: Any, key: str) -> Any:
+    return next((v for k, v in iter_items(obj) if k == key and v), None)
 
 
 _client: SonicWallClient | None = None
