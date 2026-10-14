@@ -72,6 +72,7 @@ class SonicWallClient:
 
     def __init__(self, client: httpx.Client | None = None, user: str | None = None, password: str | None = None):
         self._pin: str | None = None
+        self._auth = None
         self._host = self._port = None
         self._lock = threading.Lock()
         self._user = user if user is not None else os.environ.get("SONICWALL_USER", "")
@@ -110,7 +111,14 @@ class SonicWallClient:
         self._check_pin()  # 계정 정보를 보내기 전에 서버를 확인
         if not (self._user and self._password):
             raise SonicWallError("SONICWALL_USER / SONICWALL_PASSWORD 환경변수가 필요합니다.")
-        r = self._http.post(f"{API_BASE}/auth", auth=(self._user, self._password))
+        # SonicOS 8은 보통 Digest(SHA-256)를 요구한다. Digest를 먼저 시도하고, 서버가 Basic을
+        # 요구하면 Basic으로 대체한다.
+        digest = httpx.DigestAuth(self._user, self._password)
+        r = self._http.post(f"{API_BASE}/auth", auth=digest)
+        self._auth: httpx.Auth | tuple[str, str] | None = digest
+        if r.status_code == 401 and "basic" in r.headers.get("www-authenticate", "").lower():
+            self._auth = (self._user, self._password)
+            r = self._http.post(f"{API_BASE}/auth", auth=self._auth)
         if r.status_code >= 400:
             hint = r.headers.get("www-authenticate", "")
             raise SonicWallError(
@@ -126,6 +134,10 @@ class SonicWallClient:
                 if not self._logged_in:
                     self._login()
                 r = self._http.get(f"{API_BASE}/{p}", params=params, headers={"Accept": "application/json"})
+                if r.status_code == 401 and self._auth is not None:
+                    # 세션 쿠키가 없거나 만료: 요청 단위 인증으로 한 번 더 시도
+                    r = self._http.get(f"{API_BASE}/{p}", params=params,
+                                       headers={"Accept": "application/json"}, auth=self._auth)
                 if r.status_code == 401 and attempt == 1:
                     self._logged_in = False
                     continue

@@ -21,6 +21,10 @@ SonicWall 8세대(SonicOS 8) 방화벽의 REST API(`/api/sonicos`)를 Claude에 
 - 큰 응답은 항목 수(limit)와 글자 수로 잘라 컨텍스트 폭주 방지
 - TLS 검증 기본 ON. 자체서명 인증서는 **지문 고정**(`SONICWALL_CERT_SHA256`)으로 처리하며, 지문이 다르면 계정 정보를 보내기 전에 중단(사설 CA는 `SONICWALL_CA_BUNDLE`)
 
+## 인증 방식
+SonicOS 8.2는 로그인 시 **Digest(SHA-256, RFC 7616)**를 요구한다(실제 장비 응답으로 확인).
+서버는 Digest를 먼저 시도하고, 장비가 Basic을 요구하면 Basic으로 대체한다.
+
 ## 대상 환경
 - 목표 장비: NSa 3800 / SonicOS 8.2.2-8015-R9870 (Gen 8)
 - 로그인(`/auth`), `access-rules/ipv4`, `address-objects` 경로는 SonicWall 공식 API 문서(7.x 기준)와 일치함을 확인.
