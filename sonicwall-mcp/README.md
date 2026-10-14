@@ -22,7 +22,9 @@ SonicWall 8세대(SonicOS 8) 방화벽의 REST API(`/api/sonicos`)를 Claude에 
 - TLS 검증 기본 ON. 자체서명 인증서는 **지문 고정**(`SONICWALL_CERT_SHA256`)으로 처리하며, 지문이 다르면 계정 정보를 보내기 전에 중단(사설 CA는 `SONICWALL_CA_BUNDLE`)
 
 ## 인증 방식 (NSa 3800 / SonicOS 8.2 실측)
-1. `POST /api/sonicos/auth` 를 **Digest(SHA-256)** 로 보내면서 `X-Snwl-Api-Scope: extended`, `X-Snwl-Timer: no-reset` 헤더를 붙인다(웹 UI와 동일)
+1. `POST /api/sonicos/auth` 를 웹 UI와 같은 형식으로 보낸다: `X-Snwl-Api-Scope: extended`, `X-Snwl-Timer: no-reset`, `Origin/Referer` 헤더 + 본문 `{"override": false, "snwl": true}`.
+   인증은 웹 UI처럼 **Basic**(이 로그인에서 Digest는 `API_AUTH_REMOTE_USER`로 거부됨, 실측). 비밀번호는 인증서 지문 확인 후 TLS 안에서만 전송.
+   `override: false` 이므로 다른 관리자의 세션/설정 모드를 빼앗지 않으며, `config-mode` 에는 들어가지 않는다.
 2. 응답의 `bearer_token` 을 받아 이후 모든 요청에 `Authorization: Bearer <토큰>` 으로 사용
 3. 토큰 만료(401) 시 한 번 재로그인, 종료 시 `DELETE /auth` 로 로그아웃
 

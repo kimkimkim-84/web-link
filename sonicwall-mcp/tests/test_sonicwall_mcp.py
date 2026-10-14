@@ -1,5 +1,6 @@
 import sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+import base64
 import hashlib
 import json
 import httpx, pytest
@@ -43,13 +44,15 @@ class FakeFirewall:
         auth = req.headers.get("authorization", "")
         if req.url.path.endswith("/auth") and req.method == "POST":
             snwl = req.headers.get("x-snwl-api-scope") == "extended"
-            if not auth.startswith("Digest "):
-                # 웹 UI용 로그인(extended)은 챌린지를 전용 헤더로, userhash를 요구하며 보낸다
-                if snwl:
-                    return httpx.Response(401, headers={"X-Snwl-Authenticate": SNWL_CHALLENGE})
+            if snwl:
+                # 실측: 웹 UI용 로그인은 Basic만 통과, Digest는 API_AUTH_REMOTE_USER로 거부
+                if auth != "Basic " + base64.b64encode(b"u:p").decode():
+                    return httpx.Response(401, headers={"X-Snwl-Authenticate": CHALLENGE},
+                                          json={"status": {"info": [{"code": "E_UNAUTHORIZED", "auth_code": "API_AUTH_REMOTE_USER"}]}})
+            elif not auth.startswith("Digest "):
                 return httpx.Response(401, headers={"WWW-Authenticate": CHALLENGE})
-            if not digest_ok(auth, "POST") or (snwl and "userhash=true" not in auth):
-                return httpx.Response(401, json={"status": {"info": [{"code": "E_UNAUTHORIZED", "auth_code": "API_AUTH_REMOTE_USER"}]}})
+            elif not digest_ok(auth, "POST"):
+                return httpx.Response(401, json={"status": {"info": [{"code": "E_UNAUTHORIZED"}]}})
             info = {"code": "E_OK", "message": "Login as a user.", "read_only": "Yes"}
             body = json.loads(req.content or b"{}")
             if body.get("snwl") and req.headers.get("origin") != "https://fw":
@@ -85,7 +88,7 @@ def test_bearer_flow_and_redact():
 def test_relogin_when_token_expires():
     fw = FakeFirewall(expire_first=True)
     assert make(fw).get("version") == {"firmware_version": "8.2.0"}
-    assert fw.calls.count(("POST", "/api/sonicos/auth")) == 4  # (챌린지+Digest) x 2회 로그인
+    assert fw.calls.count(("POST", "/api/sonicos/auth")) == 2  # Basic 로그인 x 2회(만료 후 재로그인)
 
 
 def test_missing_token_gives_clear_error():
@@ -183,7 +186,7 @@ def test_wrong_password_rejected_by_digest_check():
     fw = FakeFirewall()
     http = httpx.Client(base_url="https://fw", transport=httpx.MockTransport(fw))
     c = s.SonicWallClient(client=http, user="u", password="WRONG")
-    with pytest.raises(s.SonicWallError, match="받은 Digest 챌린지: .*userhash=true") as e:
+    with pytest.raises(s.SonicWallError, match="받은 Digest 챌린지: .*algorithm=SHA-256") as e:
         c.get("version")
     assert "abc" not in str(e.value) and "xyz" not in str(e.value)  # nonce/opaque 비노출
 

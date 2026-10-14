@@ -207,14 +207,15 @@ class SonicWallClient:
             raise SonicWallError("SONICWALL_USER / SONICWALL_PASSWORD 환경변수가 필요합니다.")
         self._token = None
         # SonicOS 8.2: 웹 UI와 같은 헤더/본문으로 로그인해야 bearer_token을 받고, 이후 요청은
-        # Authorization: Bearer <토큰>으로 인증한다. 로그인 자체는 Digest(SHA-256)가 기본이며,
-        # 장비가 Basic을 요구하면 Basic으로 대체한다.
+        # Authorization: Bearer <토큰>으로 인증한다. 웹 UI는 이 로그인을 Basic으로 한다(실측:
+        # Digest는 API_AUTH_REMOTE_USER로 거부됨). Basic이 거부되면 Digest로 대체한다.
+        # Basic의 비밀번호는 TLS 안에서만, 인증서 지문 확인(_check_pin) 뒤에만 전송된다.
         headers = self._base_headers()
         url = f"{API_BASE}/auth"
         digest = SnwlDigestAuth(self._user, self._password)
-        r = self._http.post(url, headers=headers, json=LOGIN_BODY, auth=digest)
-        if r.status_code == 401 and "basic" in challenge_summary(r).lower():
-            r = self._http.post(url, headers=headers, json=LOGIN_BODY, auth=(self._user, self._password))
+        r = self._http.post(url, headers=headers, json=LOGIN_BODY, auth=(self._user, self._password))
+        if r.status_code == 401:
+            r = self._http.post(url, headers=headers, json=LOGIN_BODY, auth=digest)
         if r.status_code >= 400:
             hint = challenge_summary(r)
             raise SonicWallError(
