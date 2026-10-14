@@ -61,6 +61,34 @@ def validate_path(path: str) -> str:
     return p
 
 
+class SnwlDigestAuth(httpx.DigestAuth):
+    """Digest 인증. 웹 UI용(snwl) 로그인은 챌린지를 WWW-Authenticate 대신 X-Snwl-Authenticate로
+    보내므로(브라우저 로그인 팝업 방지), 그 값을 표준 헤더로 옮겨 httpx의 Digest 처리에 넘긴다."""
+
+    def auth_flow(self, request):
+        flow = super().auth_flow(request)
+        req = next(flow)
+        while True:
+            response = yield req
+            if response.status_code == 401 and "www-authenticate" not in response.headers:
+                for v in response.headers.get_list("x-snwl-authenticate"):
+                    response.headers.setdefault("WWW-Authenticate", v)
+            try:
+                req = flow.send(response)
+            except StopIteration:
+                return
+
+
+def challenge_summary(r: httpx.Response) -> str:
+    """챌린지 헤더에서 방식/알고리즘만 추린다(nonce/opaque 값 제외)."""
+    out = []
+    for name in ("www-authenticate", "x-snwl-authenticate"):
+        for v in r.headers.get_list(name):
+            parts = [p for p in v.replace(",", " ").split() if not p.lower().startswith(("nonce", "opaque"))]
+            out.append(f"{name}: {' '.join(parts)[:150]}")
+    return "; ".join(out)
+
+
 def normalize_fp(fp: str) -> str:
     return re.sub(r"[^0-9a-f]", "", fp.lower())
 
@@ -132,14 +160,14 @@ class SonicWallClient:
         # 장비가 Basic을 요구하면 Basic으로 대체한다.
         headers = self._base_headers()
         url = f"{API_BASE}/auth"
-        r = self._http.post(url, headers=headers, json=LOGIN_BODY, auth=httpx.DigestAuth(self._user, self._password))
-        if r.status_code == 401 and "basic" in r.headers.get("www-authenticate", "").lower():
+        r = self._http.post(url, headers=headers, json=LOGIN_BODY, auth=SnwlDigestAuth(self._user, self._password))
+        if r.status_code == 401 and "basic" in challenge_summary(r).lower():
             r = self._http.post(url, headers=headers, json=LOGIN_BODY, auth=(self._user, self._password))
         if r.status_code >= 400:
-            hint = r.headers.get("www-authenticate", "")
+            hint = challenge_summary(r)
             raise SonicWallError(
                 f"로그인 실패: HTTP {r.status_code}"
-                + (f" | WWW-Authenticate: {hint[:200]}" if hint else "")
+                + (f" | 챌린지: {hint}" if hint else "")
                 + (f" | 응답: {r.text[:300]}" if r.text else "")
                 + f" | 응답 헤더: {sorted(r.headers.keys())}"
                 + f" | 비교(본문/전용헤더 없는 일반 로그인): {self._plain_login_status()}")

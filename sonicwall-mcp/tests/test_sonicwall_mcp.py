@@ -26,7 +26,9 @@ class FakeFirewall:
         auth = req.headers.get("authorization", "")
         if req.url.path.endswith("/auth") and req.method == "POST":
             if not auth.startswith("Digest "):
-                return httpx.Response(401, headers={"WWW-Authenticate": CHALLENGE})
+                # 웹 UI용 로그인(extended)은 챌린지를 전용 헤더로 보낸다(실측)
+                name = "X-Snwl-Authenticate" if req.headers.get("x-snwl-api-scope") == "extended" else "WWW-Authenticate"
+                return httpx.Response(401, headers={name: CHALLENGE})
             assert "algorithm=SHA-256" in auth and 'username="u"' in auth
             info = {"code": "E_OK", "message": "Login as a user.", "read_only": "Yes"}
             body = json.loads(req.content or b"{}")
@@ -107,7 +109,7 @@ def test_login_failure_shows_server_reason():
     with pytest.raises(s.SonicWallError) as e:
         make(h).get("version")
     msg = str(e.value)
-    assert "401" in msg and "Basic realm" in msg and "Bad credentials" in msg
+    assert "401" in msg and "Basic" in msg and "Bad credentials" in msg
 
 
 def test_pin_match_and_mismatch(monkeypatch):
@@ -149,3 +151,9 @@ def test_login_failure_reports_plain_login_comparison():
 
     with pytest.raises(s.SonicWallError, match=r"일반 로그인\): HTTP 200"):
         make(h).get("version")
+
+
+def test_challenge_summary_hides_nonce():
+    r = httpx.Response(401, headers={"X-Snwl-Authenticate": CHALLENGE})
+    out = s.challenge_summary(r)
+    assert "SHA-256" in out and "abc" not in out and "xyz" not in out
