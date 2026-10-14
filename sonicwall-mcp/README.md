@@ -34,7 +34,7 @@ SonicWall 8세대(SonicOS 8) 방화벽의 REST API(`/api/sonicos`)를 Claude에 
 세션 쿠키는 쓰지 않으며, 위 헤더 없이 로그인하면 토큰이 발급되지 않아 모든 조회가 401(E_UNAUTHORIZED)이 된다.
 
 ## 대상 환경
-- 목표 장비: NSa 3800 / SonicOS 8.2.2-8015-R9870 (Gen 8)
+- 검증 장비: NSa 3800 / SonicOS 8.2.0-8009 (Gen 8) — check.py 5개 조회 성공 확인
 - 로그인(`/auth`), `access-rules/ipv4`, `address-objects` 경로는 SonicWall 공식 API 문서(7.x 기준)와 일치함을 확인.
   8.2.2 전용 문서는 확인하지 못했으므로 첫 연결 시 `get_version`부터 호출해 검증할 것.
 - 로그인 시 `override`(기존 관리자 세션 강제 종료)는 **사용하지 않음** — 운영 중 다른 관리자의 세션을 끊지 않기 위함.
