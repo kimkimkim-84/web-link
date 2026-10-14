@@ -111,8 +111,13 @@ class SonicWallClient:
             raise SonicWallError(
                 f"인증서 지문 불일치(중간자 공격 또는 인증서 교체 가능성). 기대={self._pin} 실제={actual}")
 
+    def _base_headers(self) -> dict[str, str]:
+        # 웹 UI 로그인(snwl)은 출처를 검사하므로 브라우저처럼 Origin/Referer를 보낸다.
+        origin = str(self._http.base_url).rstrip("/")
+        return {"Accept": "application/json", "Origin": origin, "Referer": origin + "/", **SNWL_HEADERS}
+
     def _headers(self) -> dict[str, str]:
-        h = {"Accept": "application/json", **SNWL_HEADERS}
+        h = self._base_headers()
         if self._token:
             h["Authorization"] = f"Bearer {self._token}"
         return h
@@ -125,7 +130,7 @@ class SonicWallClient:
         # SonicOS 8.2: 웹 UI와 같은 헤더/본문으로 로그인해야 bearer_token을 받고, 이후 요청은
         # Authorization: Bearer <토큰>으로 인증한다. 로그인 자체는 Digest(SHA-256)가 기본이며,
         # 장비가 Basic을 요구하면 Basic으로 대체한다.
-        headers = {"Accept": "application/json", **SNWL_HEADERS}
+        headers = self._base_headers()
         url = f"{API_BASE}/auth"
         r = self._http.post(url, headers=headers, json=LOGIN_BODY, auth=httpx.DigestAuth(self._user, self._password))
         if r.status_code == 401 and "basic" in r.headers.get("www-authenticate", "").lower():
@@ -135,7 +140,9 @@ class SonicWallClient:
             raise SonicWallError(
                 f"로그인 실패: HTTP {r.status_code}"
                 + (f" | WWW-Authenticate: {hint[:200]}" if hint else "")
-                + (f" | 응답: {r.text[:300]}" if r.text else ""))
+                + (f" | 응답: {r.text[:300]}" if r.text else "")
+                + f" | 응답 헤더: {sorted(r.headers.keys())}"
+                + f" | 비교(본문/전용헤더 없는 일반 로그인): {self._plain_login_status()}")
         try:
             body = r.json()
         except ValueError:
@@ -146,6 +153,16 @@ class SonicWallClient:
             raise SonicWallError(f"로그인은 성공했지만 응답에 bearer_token이 없습니다. 응답 키: {keys}")
         self._token = str(token)
         self._logged_in = True
+
+    def _plain_login_status(self) -> str:
+        """진단용: 토큰 없는 일반 로그인이 되는지 확인하고 곧바로 로그아웃한다."""
+        try:
+            r = self._http.post(f"{API_BASE}/auth", auth=httpx.DigestAuth(self._user, self._password))
+            if r.status_code < 400:
+                self._http.delete(f"{API_BASE}/auth")
+            return f"HTTP {r.status_code}"
+        except httpx.HTTPError as e:
+            return f"{type(e).__name__}"
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> Any:
         p = validate_path(path)

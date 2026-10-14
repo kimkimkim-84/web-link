@@ -30,6 +30,8 @@ class FakeFirewall:
             assert "algorithm=SHA-256" in auth and 'username="u"' in auth
             info = {"code": "E_OK", "message": "Login as a user.", "read_only": "Yes"}
             body = json.loads(req.content or b"{}")
+            if body.get("snwl") and req.headers.get("origin") != "https://fw":
+                return httpx.Response(401)  # 웹 UI 로그인은 출처(Origin) 검사
             assert body.get("override") is False  # 다른 관리자 세션을 빼앗지 않음
             if req.headers.get("x-snwl-api-scope") == "extended" and body.get("snwl") is True:
                 info["bearer_token"] = self.token
@@ -134,3 +136,16 @@ def test_never_enters_config_mode():
     c.get("zones")
     c.close()
     assert not any("config-mode" in path for _, path in fw.calls)
+
+
+def test_login_failure_reports_plain_login_comparison():
+    def h(req):
+        auth = req.headers.get("authorization", "")
+        if not auth:
+            return httpx.Response(401, headers={"WWW-Authenticate": CHALLENGE})
+        if req.method == "DELETE":
+            return httpx.Response(200, json={})
+        return httpx.Response(401 if req.content else 200, json={})  # snwl 로그인만 거부
+
+    with pytest.raises(s.SonicWallError, match=r"일반 로그인\): HTTP 200"):
+        make(h).get("version")
