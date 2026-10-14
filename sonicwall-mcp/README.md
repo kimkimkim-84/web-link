@@ -10,8 +10,15 @@ SonicWall 8세대(SonicOS 8) 방화벽의 REST API(`/api/sonicos`)를 Claude에 
 - 큰 응답은 항목 수(limit)와 글자 수로 잘라 컨텍스트 폭주 방지
 - TLS 검증 기본 ON (사설 CA는 `SONICWALL_CA_BUNDLE`)
 
+## 대상 환경
+- 목표 장비: NSa 3800 / SonicOS 8.2.2-8015-R9870 (Gen 8)
+- 로그인(`/auth`), `access-rules/ipv4`, `address-objects` 경로는 SonicWall 공식 API 문서(7.x 기준)와 일치함을 확인.
+  8.2.2 전용 문서는 확인하지 못했으므로 첫 연결 시 `get_version`부터 호출해 검증할 것.
+- 로그인 시 `override`(기존 관리자 세션 강제 종료)는 **사용하지 않음** — 운영 중 다른 관리자의 세션을 끊지 않기 위함.
+
 ## 1. 방화벽 준비
-1. 관리 > 시스템 설정 > 관리자(Administration) 에서 **SonicOS API 활성화**(Basic 인증 허용)
+1. 장치 > 설정 > 관리(Administration) 에서 **SonicOS API 활성화** 및 **HTTP Basic 인증(RFC-2617) 허용**
+   (메뉴 위치는 버전에 따라 다를 수 있음)
 2. **읽기 전용 관리자 계정**(예: `mcp-readonly`)을 만들고, 이 서버에서만 접근하도록 관리 IP 제한
 
 ## 2. 설치 / 테스트
