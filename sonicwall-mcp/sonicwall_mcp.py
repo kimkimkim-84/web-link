@@ -229,6 +229,7 @@ class SonicWallClient:
             body = r.json()
         except ValueError:
             body = {}
+        self.login_keys = sorted({k for k, _ in iter_items(body)})  # 진단용(키 이름만)
         token = find_key(body, "bearer_token")
         if not token:
             keys = sorted({k for k, _ in iter_items(body)})

@@ -1,6 +1,7 @@
 """Claude 없이 방화벽 연결을 점검하는 스크립트 (읽기 전용 GET만 수행).
 
 사용: SONICWALL_HOST/USER/PASSWORD 환경변수를 설정한 뒤  python check.py
+     로그인 후 조회가 401이면  python check.py --debug  (토큰/헤더 방식 비교, 토큰 값은 출력 안 함)
 """
 import sys
 
@@ -11,7 +12,49 @@ import sonicwall_mcp as s
 CHECKS = ["version", "zones", "interfaces/ipv4", "address-objects/ipv4", "access-rules/ipv4"]
 
 
+# 웹 UI가 실제로 성공한 GET(읽기 전용). 토큰 자체가 유효한지 가리는 기준으로 쓴다.
+GUI_PATH = "dynamic-file/getRTData.json?src=0&ipVerApps=2&ipVerBandwidth=2"
+
+
+def code_of(r: httpx.Response):
+    try:
+        return r.status_code, (r.json().get("status", {}).get("info") or [{}])[0].get("code")
+    except (ValueError, AttributeError):
+        return r.status_code, r.headers.get("content-type", "")[:30]
+
+
+def debug() -> int:
+    c = s.client()
+    c._login()
+    tok = c._token or ""
+    print("로그인 응답 키:", c.login_keys)
+    print(f"토큰 형태: 길이={len(tok)}, 공백포함={' ' in tok}, 점개수={tok.count('.')}, "
+          f"'Bearer'로시작={tok.lower().startswith('bearer')}")
+    base = c._base_headers()
+    no_origin = {k: v for k, v in base.items() if k not in ("Origin", "Referer")}
+    no_snwl = {k: v for k, v in base.items() if not k.startswith("X-Snwl")}
+    variants = {
+        "현재 방식": {**base, "Authorization": f"Bearer {tok}"},
+        "Origin/Referer 제외": {**no_origin, "Authorization": f"Bearer {tok}"},
+        "X-Snwl 헤더 제외": {**no_snwl, "Authorization": f"Bearer {tok}"},
+        "브라우저 Accept": {**base, "Accept": "application/json, text/plain, */*", "Authorization": f"Bearer {tok}"},
+        "Bearer 접두어 없이": {**base, "Authorization": tok},
+    }
+    for path in ("version", GUI_PATH):
+        print(f"\nGET /{path.split('?')[0]}")
+        for name, h in variants.items():
+            print(f"  {name:<20} -> {code_of(c._http.get(f'{s.API_BASE}/{path}', headers=h))}")
+    c.close()
+    return 0
+
+
 def main() -> int:
+    if "--debug" in sys.argv:
+        try:
+            return debug()
+        except (s.SonicWallError, httpx.HTTPError) as e:
+            print(f"[오류] {type(e).__name__}: {e}")
+            return 1
     try:
         c = s.client()
     except s.SonicWallError as e:
