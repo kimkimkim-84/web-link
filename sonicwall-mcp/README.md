@@ -3,6 +3,17 @@
 SonicWall 8세대(SonicOS 8) 방화벽의 REST API(`/api/sonicos`)를 Claude에 연결하는 MCP 서버.
 **GET만 사용**하므로 Claude가 설정을 바꿀 수 없다. (인증용 `POST /auth`, 로그아웃 `DELETE /auth`만 예외)
 
+## 작업 흐름 (클라우드 개발 세션 + 내 PC)
+- **클라우드 세션**: 코드 수정/푸시만 담당. 내부망 방화벽에는 접근 불가.
+- **내 PC(로컬 Claude Code)**: 방화벽 조회 담당. 등록된 `sonicwall` MCP가 여기서 동작.
+1. PC에서 `.\update.ps1` 실행(최신 코드 받기) 후 Claude Code 재시작
+2. 연결 점검(Claude 없이): 환경변수 설정 후 `python check.py`
+   ```powershell
+   $env:SONICWALL_HOST="<내부 IP>"; $env:SONICWALL_USER="mcp-readonly"; $env:SONICWALL_PASSWORD="<비밀번호>"
+   python check.py
+   ```
+3. 오류가 나면 `check.py` 출력(비밀번호 제외)을 클라우드 세션에 붙여 수정 요청 → 푸시 → 1번 반복
+
 ## 안전장치
 - 읽기 전용: 쓰기/commit 호출 코드가 없음
 - 경로 허용 목록(`ALLOWED_PREFIXES`): 인증·관리자·설정내보내기 등은 조회 불가
