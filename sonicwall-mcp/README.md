@@ -7,9 +7,9 @@ SonicWall 8세대(SonicOS 8) 방화벽의 REST API(`/api/sonicos`)를 Claude에 
 - **클라우드 세션**: 코드 수정/푸시만 담당. 내부망 방화벽에는 접근 불가.
 - **내 PC(로컬 Claude Code)**: 방화벽 조회 담당. 등록된 `sonicwall` MCP가 여기서 동작.
 1. PC에서 `.\update.ps1` 실행(최신 코드 받기) 후 Claude Code 재시작
-2. 연결 점검(Claude 없이): 환경변수 설정 후 `python check.py`
+2. 연결 점검(Claude 없이):
    ```powershell
-   $env:SONICWALL_HOST="<내부 IP>"; $env:SONICWALL_USER="mcp-readonly"; $env:SONICWALL_PASSWORD="<비밀번호>"
+   $env:SONICWALL_HOST="<방화벽 IP>"; $env:SONICWALL_CRED_TARGET="SonicWallMCP/API"; $env:SONICWALL_CERT_SHA256="<지문>"
    python check.py
    ```
 3. 오류가 나면 `check.py` 출력(비밀번호 제외)을 클라우드 세션에 붙여 수정 요청 → 푸시 → 1번 반복
@@ -52,20 +52,24 @@ python -m pytest -q
 cp .env.example .env   # 값 수정
 ```
 
-## 3. Claude 연결
-Claude Code:
-```bash
-claude mcp add sonicwall \
-  -e SONICWALL_HOST=192.168.1.1 -e SONICWALL_USER=mcp-readonly -e SONICWALL_PASSWORD='***' \
-  -- python /절대경로/sonicwall-mcp/sonicwall_mcp.py
+## 3. 비밀번호 저장 (Windows 자격 증명 관리자, 권장)
+비밀번호를 `.claude.json`·명령 기록·채팅에 남기지 않기 위해 자격 증명 관리자에 저장한다.
+```powershell
+python -m pip install pywin32
+python save_password.py            # 계정명 입력 → 비밀번호 입력(화면에 표시 안 됨) → 'SonicWallMCP/API'에 저장
 ```
-Claude Desktop(`claude_desktop_config.json`):
-```json
-{"mcpServers": {"sonicwall": {
-  "command": "python", "args": ["/절대경로/sonicwall-mcp/sonicwall_mcp.py"],
-  "env": {"SONICWALL_HOST": "192.168.1.1", "SONICWALL_USER": "mcp-readonly", "SONICWALL_PASSWORD": "***"}
-}}}
+비밀번호를 바꾸면 이 명령만 다시 실행하면 된다(MCP 재등록 불필요, Claude Code만 재시작).
+
+## 4. Claude 연결
+Claude Code (PowerShell, 한 줄):
+```powershell
+claude mcp add sonicwall -s user -e SONICWALL_HOST=<방화벽 IP> -e SONICWALL_CRED_TARGET=SonicWallMCP/API -e SONICWALL_CERT_SHA256=<지문> -- python "<절대경로>\sonicwall-mcp\sonicwall_mcp.py"
 ```
+- `-s user`: 어느 폴더에서 `claude`를 실행해도 사용 가능
+- 계정명은 자격 증명에서 읽는다(`SONICWALL_USER`로 덮어쓸 수 있음)
+- `SONICWALL_PASSWORD` 환경변수가 있으면 그 값이 우선한다(자격 증명 관리자를 쓸 수 없는 환경용)
+
+SSH 방식 MCP와 함께 쓰면 이름이 겹치지 않게 등록한다(예: `sonicwall-api`, `sonicwall-ssh`).
 
 ## 자체서명 인증서 (CERTIFICATE_VERIFY_FAILED)
 ```powershell

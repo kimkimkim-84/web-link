@@ -244,3 +244,40 @@ def test_get_failure_reports_login_steps():
 
     with pytest.raises(s.SonicWallError, match="로그인 단계: auth:200/API_AUTH_USER_CAN_MGMT → start-management"):
         make(StuckFirewall()).get("version")
+
+
+class FakeWin32Cred:
+    CRED_TYPE_GENERIC = 1
+
+    def __init__(self, store):
+        self.store = store
+
+    def CredRead(self, target, typ):
+        if target not in self.store:
+            raise OSError("Element not found")
+        user, pw = self.store[target]
+        return {"UserName": user, "CredentialBlob": pw.encode("utf-16-le")}
+
+
+def test_credentials_from_credential_manager(monkeypatch):
+    monkeypatch.setitem(sys.modules, "win32cred", FakeWin32Cred({"SonicWallMCP/API": ("mcp-readonly", "s3cr3t!")}))
+    monkeypatch.delenv("SONICWALL_PASSWORD", raising=False)
+    monkeypatch.delenv("SONICWALL_USER", raising=False)
+    monkeypatch.setenv("SONICWALL_CRED_TARGET", "SonicWallMCP/API")
+    assert s.load_credentials() == ("mcp-readonly", "s3cr3t!")
+
+
+def test_env_password_takes_precedence(monkeypatch):
+    monkeypatch.setitem(sys.modules, "win32cred", FakeWin32Cred({}))
+    monkeypatch.setenv("SONICWALL_USER", "u")
+    monkeypatch.setenv("SONICWALL_PASSWORD", "envpw")
+    monkeypatch.setenv("SONICWALL_CRED_TARGET", "SonicWallMCP/API")
+    assert s.load_credentials() == ("u", "envpw")
+
+
+def test_missing_credential_entry_is_clear_error(monkeypatch):
+    monkeypatch.setitem(sys.modules, "win32cred", FakeWin32Cred({}))
+    monkeypatch.delenv("SONICWALL_PASSWORD", raising=False)
+    monkeypatch.setenv("SONICWALL_CRED_TARGET", "Nope/Target")
+    with pytest.raises(s.SonicWallError, match="save_password.py Nope/Target"):
+        s.load_credentials()

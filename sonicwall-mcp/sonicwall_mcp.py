@@ -140,6 +140,33 @@ def challenge_summary(r: httpx.Response) -> str:
     return "; ".join(out)
 
 
+DEFAULT_CRED_TARGET = "SonicWallMCP/API"
+
+
+def load_credentials() -> tuple[str, str]:
+    """(계정, 비밀번호). SONICWALL_PASSWORD 환경변수가 있으면 그 값을, 없으면
+    SONICWALL_CRED_TARGET 이름으로 Windows 자격 증명 관리자에서 읽는다.
+    자격 증명 관리자를 쓰면 비밀번호가 .claude.json/명령 기록에 남지 않는다."""
+    user = os.environ.get("SONICWALL_USER", "")
+    password = os.environ.get("SONICWALL_PASSWORD", "")
+    target = os.environ.get("SONICWALL_CRED_TARGET")
+    if password or not target:
+        return user, password
+    try:
+        import win32cred  # pywin32 (Windows 전용)
+    except ImportError as e:
+        raise SonicWallError("SONICWALL_CRED_TARGET을 쓰려면 Windows에서 pywin32가 필요합니다: "
+                             "python -m pip install pywin32") from e
+    try:
+        cred = win32cred.CredRead(target, win32cred.CRED_TYPE_GENERIC)
+    except Exception as e:  # pywintypes.error: 항목 없음 등
+        raise SonicWallError(f"자격 증명 관리자에 '{target}' 항목이 없습니다. "
+                             f"python save_password.py {target} 로 저장하세요.") from e
+    blob = cred.get("CredentialBlob") or b""
+    password = blob.decode("utf-16-le") if isinstance(blob, bytes) else str(blob)
+    return user or cred.get("UserName") or "", password
+
+
 def normalize_fp(fp: str) -> str:
     return re.sub(r"[^0-9a-f]", "", fp.lower())
 
@@ -159,8 +186,11 @@ class SonicWallClient:
         self.login_steps: list[str] = []
         self._host = self._port = None
         self._lock = threading.Lock()
-        self._user = user if user is not None else os.environ.get("SONICWALL_USER", "")
-        self._password = password if password is not None else os.environ.get("SONICWALL_PASSWORD", "")
+        if user is None or password is None:
+            env_user, env_password = load_credentials()
+            user = env_user if user is None else user
+            password = env_password if password is None else password
+        self._user, self._password = user, password
         self._logged_in = False
         if client is not None:
             self._http = client
@@ -241,7 +271,8 @@ class SonicWallClient:
     def _login(self) -> None:
         self._check_pin()  # 계정 정보를 보내기 전에 서버를 확인
         if not (self._user and self._password):
-            raise SonicWallError("SONICWALL_USER / SONICWALL_PASSWORD 환경변수가 필요합니다.")
+            raise SonicWallError("계정 정보가 없습니다. SONICWALL_CRED_TARGET(자격 증명 관리자, 권장) 또는 "
+                                 "SONICWALL_USER/SONICWALL_PASSWORD 환경변수를 설정하세요.")
         self._token = None
         self.login_steps = []
         body, self._token = self._authenticate()
